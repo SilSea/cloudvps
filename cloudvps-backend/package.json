@@ -1,0 +1,40 @@
+{
+  "name": "cloudvps-backend",
+  "version": "1.0.0",
+  "module": "src/index.ts",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "db:generate": "bunx prisma generate",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:push": "bunx prisma db push",
+    "db:seed": "bun run prisma/seed.ts",
+    "db:seed:prod": "bun run prisma/seed.production.ts",
+    "db:setup:prod": "bunx prisma migrate deploy && bun run prisma/seed.production.ts",
+    "db:studio": "bunx prisma studio",
+    "test": "bun test tests/unit && bun test tests/capacity && bun test tests/utils && bun test tests/middlewares && bun test tests/services && bun test tests/isolated",
+    "test:unit": "bun test tests/unit && bun test tests/capacity && bun test tests/utils && bun test tests/middlewares && bun test tests/services && bun test tests/isolated",
+    "test:integration": "bun test --timeout 30000 tests/integration/phase1-3.test.ts && bun test --timeout 30000 tests/integration/phase4-api.test.ts && bun test --timeout 30000 tests/integration/phase5-api.test.ts && bun test --timeout 30000 tests/integration/phase8-nat-api.test.ts && bun test --timeout 30000 tests/integration/phase9-upgrade-api.test.ts && bun test --timeout 30000 tests/integration/phase10-categories-api.test.ts && bun test --timeout 30000 tests/integration/phase11-email-template.test.ts && bun test --timeout 30000 tests/integration/phase11-user-create.test.ts && bun test --timeout 30000 tests/integration/phase12-terminal-api.test.ts && bun test --timeout 30000 tests/integration/phase13-ticket-api.test.ts && bun test --timeout 30000 tests/integration/phase14-capacity-lock.test.ts && bun test --timeout 30000 tests/integration/phase15-upload.test.ts && bun test --timeout 30000 tests/integration/phase16-password-api.test.ts",
+    "test:live": "bun test tests/live",
+    "test:all": "bun test tests/unit && bun test tests/capacity && bun test tests/utils && bun test tests/middlewares && bun test tests/services && bun test tests/isolated && bun test tests/integration",
+    "test:ui": "bun tests/serve.ts"
+  },
+  "dependencies": {
+    "@elysiajs/bearer": "^1.4.4",
+    "@elysiajs/cors": "^1.4.2",
+    "@elysiajs/jwt": "^1.4.2",
+    "@elysiajs/swagger": "^1.3.1",
+    "@prisma/client": "^6.7.0",
+    "bcryptjs": "^2.4.3",
+    "elysia": "^1.4.28",
+    "ioredis": "^5.4.2",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^6.9.16"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^6.4.17",
+    "bun-types": "^1.2.0",
+    "prisma": "^6.7.0"
+  }
+}

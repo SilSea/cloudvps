@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudVPS — Features Overview</title>
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --border: #e4e6ea;
+    --navy: #1a1a2e;
+    --blue: #1565c0;
+    --blue-lt: #e3f2fd;
+    --green: #2e7d32;
+    --green-lt: #e8f5e9;
+    --orange: #e65100;
+    --orange-lt: #fff3e0;
+    --red: #c62828;
+    --red-lt: #fce4ec;
+    --purple: #6a1b9a;
+    --purple-lt: #f3e5f5;
+    --teal: #00695c;
+    --teal-lt: #e0f2f1;
+    --gray: #555;
+    --gray-lt: #f8f9fb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: #1a1a2e; line-height: 1.6; }
+
+  /* ── Header ── */
+  .header {
+    background: var(--navy);
+    color: #fff;
+    padding: 28px 32px 24px;
+    border-bottom: 3px solid #4fc3f7;
+  }
+  .header h1 { font-size: 26px; font-weight: 800; color: #4fc3f7; margin-bottom: 4px; }
+  .header p  { font-size: 14px; color: #90caf9; }
+  .header .meta { margin-top: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .meta-chip { background: rgba(79,195,247,.15); border: 1px solid rgba(79,195,247,.3); color: #90caf9; font-size: 12px; padding: 4px 12px; border-radius: 20px; }
+
+  /* ── Layout ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+  /* ── TOC ── */
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 32px; }
+  .toc h2 { font-size: 13px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 12px; }
+  .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }
+  .toc-link { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; text-decoration: none; color: var(--blue); font-size: 13px; transition: background .15s; }
+  .toc-link:hover { background: var(--blue-lt); }
+  .toc-num { font-size: 11px; font-weight: 700; background: var(--blue-lt); color: var(--blue); padding: 2px 7px; border-radius: 10px; min-width: 32px; text-align: center; }
+
+  /* ── Section ── */
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 28px; overflow: hidden; scroll-margin-top: 20px; }
+  .section-head { padding: 18px 24px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 14px; }
+  .section-icon { font-size: 28px; line-height: 1; }
+  .section-title-wrap { flex: 1; }
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .section-sub  { font-size: 13px; color: var(--gray); }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 10px; white-space: nowrap; }
+  .badge-green   { background: var(--green-lt); color: var(--green); }
+  .badge-blue    { background: var(--blue-lt);  color: var(--blue); }
+  .badge-orange  { background: var(--orange-lt); color: var(--orange); }
+  .badge-red     { background: var(--red-lt);   color: var(--red); }
+  .badge-purple  { background: var(--purple-lt); color: var(--purple); }
+  .badge-teal    { background: var(--teal-lt);  color: var(--teal); }
+  .badge-gray    { background: #eee; color: #666; }
+  .badge-done    { background: #e8f5e9; color: #2e7d32; }
+  .badge-progress { background: #fff3e0; color: #e65100; }
+
+  .section-body { padding: 20px 24px; }
+
+  /* ── Feature list ── */
+  .feature-list { list-style: none; padding: 0; margin-bottom: 16px; }
+  .feature-list li { padding: 6px 0 6px 20px; font-size: 13.5px; border-bottom: 1px solid #f4f4f6; position: relative; }
+  .feature-list li:last-child { border-bottom: none; }
+  .feature-list li::before { content: '›'; position: absolute; left: 4px; color: var(--blue); font-weight: 700; }
+
+  /* ── API table ── */
+  .api-title { font-size: 12px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin: 20px 0 8px; }
+  .api-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .api-table th { background: var(--gray-lt); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .4px; border-bottom: 2px solid var(--border); }
+  .api-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .api-table tr:last-child td { border-bottom: none; }
+  .api-table tr:hover td { background: #fafbfc; }
+  .method { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  .m-get    { background: #e3f2fd; color: #1565c0; }
+  .m-post   { background: #e8f5e9; color: #2e7d32; }
+  .m-put    { background: #f3e5f5; color: #6a1b9a; }
+  .m-patch  { background: #fff3e0; color: #e65100; }
+  .m-delete { background: #fce4ec; color: #c62828; }
+  .path { font-family: 'Courier New', monospace; color: var(--navy); }
+  .roles { display: flex; gap: 4px; flex-wrap: wrap; }
+  .role { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
+  .r-admin   { background: #fce4ec; color: #c62828; }
+  .r-support { background: #fff3e0; color: #e65100; }
+  .r-user    { background: #e3f2fd; color: #1565c0; }
+  .r-public  { background: #f3f4f6; color: #555; }
+  .r-owner   { background: #e8f5e9; color: #2e7d32; }
+  .deferred  { color: #aaa; font-style: italic; font-size: 11px; }
+
+  /* ── Sub-sections ── */
+  .sub { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .sub-title { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--navy); }
+
+  /* ── Info box ── */
+  .info-box { background: var(--blue-lt); border-left: 3px solid var(--blue); border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 13px; margin: 12px 0; }
+  .info-box.green { background: var(--green-lt); border-color: var(--green); }
+  .info-box.orange { background: var(--orange-lt); border-color: var(--orange); }
+  .info-box.purple { background: var(--purple-lt); border-color: var(--purple); }
+
+  /* ── Phase ribbon ── */
+  .phase-ribbon { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; margin-left: auto; flex-shrink: 0; }
+  .phase-done { background: #c8e6c9; color: #1b5e20; }
+  .phase-wip  { background: #ffe0b2; color: #bf360c; }
+
+  /* ── Grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Role matrix ── */
+  .role-matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .role-matrix th { background: var(--navy); color: #90caf9; padding: 10px 14px; text-align: left; }
+  .role-matrix th:first-child { width: 140px; }
+  .role-matrix td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .role-matrix tr:nth-child(even) td { background: #fafbfc; }
+  .check { color: var(--green); font-weight: 700; }
+  .cross { color: #bbb; }
+  .read-only { color: var(--orange); font-weight: 600; font-size: 11px; }
+
+  /* ── Footer ── */
+  .footer { text-align: center; padding: 32px 0 48px; font-size: 12px; color: #aaa; }
+
+  /* ── Flow diagram (text-based) ── */
+  .flow-wrap { margin: 20px 0 8px; }
+  .flow-title { font-size: 12px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .flow-text { background: #f8f9fb; border: 1px solid #e0e3e8; border-left: 3px solid #90caf9; border-radius: 0 6px 6px 0; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.7; color: #1a1a2e; white-space: pre; overflow-x: auto; margin: 0; }
+
+  /* ── Endpoint cards ── */
+  .ep-cards { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .ep-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .ep-card-head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: var(--gray-lt); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .ep-card-desc { font-size: 12.5px; color: #444; margin-left: 4px; }
+  .ep-card-body { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  @media(max-width:700px){ .ep-card-body { grid-template-columns: 1fr; } }
+  .ep-pane { padding: 12px 14px; border-right: 1px solid var(--border); }
+  .ep-pane:last-child { border-right: none; }
+  .ep-pane-title { font-size: 11px; font-weight: 700; color: var(--gray); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+  .ep-pre { background: #f8f9fb; border: 1px solid #e8eaed; border-radius: 5px; padding: 8px 10px; font-family: 'Courier New', monospace; font-size: 11.5px; color: #1a1a2e; white-space: pre-wrap; word-break: break-word; margin: 0; }
+  .ep-note { padding: 8px 14px; background: #fffbf0; border-top: 1px solid #ffe082; font-size: 12px; color: #7a5800; }
+  .ep-errors { margin-top: 8px; font-size: 11.5px; }
+  .ep-errors span { display: inline-block; background: var(--red-lt); color: var(--red); border-radius: 4px; padding: 1px 6px; margin: 2px 2px 2px 0; font-weight: 700; font-size: 11px; }
+  .ep-tag { font-size: 10px; font-weight: 700; background: var(--teal-lt); color: var(--teal); padding: 1px 7px; border-radius: 10px; }
+  .ep-tag.rl { background: var(--orange-lt); color: var(--orange); }
+  .ep-tag.audit { background: var(--purple-lt); color: var(--purple); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ CloudVPS Backend — Features Overview</h1>
+  <p>VPS Cloud Rental Service · Bun + Elysia.js + Prisma + Redis + Proxmox VE</p>
+  <div class="meta">
+    <span class="meta-chip">📅 Updated: 2026-06-21</span>
+    <span class="meta-chip">✅ Phase 1–5, 7, 8, 9, 10 Complete</span>
+    <span class="meta-chip">🔧 Phase 6 (Staging) In Progress</span>
+    <span class="meta-chip">🧪 ~590 Tests Passing</span>
+    <span class="meta-chip">13 Feature Modules</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Table of Contents</h2>
+    <div class="toc-grid">
+      <a class="toc-link" href="#f1"><span class="toc-num">F1</span> RBAC & Authentication</a>
+      <a class="toc-link" href="#f2"><span class="toc-num">F2</span> Account Management</a>
+      <a class="toc-link" href="#f3"><span class="toc-num">F3</span> Package Management</a>
+      <a class="toc-link" href="#f4"><span class="toc-num">F4</span> PDPA & Terms of Service</a>
+      <a class="toc-link" href="#f5"><span class="toc-num">F5</span> VPS Management</a>
+      <a class="toc-link" href="#f6"><span class="toc-num">F6</span> Orders & Payment</a>
+      <a class="toc-link" href="#f7"><span class="toc-num">F7</span> Support System</a>
+      <a class="toc-link" href="#f8"><span class="toc-num">F8</span> System Config</a>
+      <a class="toc-link" href="#f9"><span class="toc-num">F9</span> Email Broadcast</a>
+      <a class="toc-link" href="#f10"><span class="toc-num">F10</span> Promo Limits & Auto-Renew</a>
+      <a class="toc-link" href="#f11"><span class="toc-num">F11</span> Port Forwarding / NAT</a>
+      <a class="toc-link" href="#f12"><span class="toc-num">F12</span> VM Reconfigure & Upgrade</a>
+      <a class="toc-link" href="#f13"><span class="toc-num">F13</span> Package Categories</a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F1 RBAC -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f1">
+    <div class="section-head">
+      <div class="section-icon">🔐</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F1 — RBAC & Authentication</div>
+        <div class="section-sub">Role-Based Access Control · JWT · 3 Roles</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 1</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">ระบบ</div>
+          <ul class="feature-list">
+            <li>Login ด้วย Email + Password</li>
+            <li>JWT Access Token (หมดอายุ 15 นาที) + <code>jti</code> ป้องกัน replay</li>
+            <li>JWT Refresh Token (7 วัน)</li>
+            <li>ยืนยัน email ก่อน login ได้</li>
+            <li>Rate limit: 5 login/15 นาที ต่อ IP</li>
+            <li>บล็อก user ที่ status = false</li>
+            <li>Logout → blocklist token ใน Redis</li>
+          </ul>
+        </div>
+        <div>
+          <div class="sub-title">3 Roles</div>
+          <table class="role-matrix">
+            <tr><th>Role</th><th>สิทธิ์</th></tr>
+            <tr><td><span class="badge r-admin">ADMIN</span></td><td>จัดการทุกอย่าง ทั้ง user, VPS, config, payment</td></tr>
+            <tr><td><span class="badge r-support">SUPPORT</span></td><td>ดู/จัดการ VPS, ดู user, อ่าน config (ไม่มีสิทธิ์ write critical)</td></tr>
+            <tr><td><span class="badge r-user">USER</span></td><td>สั่งซื้อ, จัดการ VPS ตัวเอง, ชำระเงิน</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/auth/register</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>สมัครสมาชิก</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/auth/login</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>เข้าสู่ระบบ → JWT</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/auth/refresh</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>ต่ออายุ access token</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/auth/logout</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>ล้าง session, blocklist token</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/auth/verify/:token</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>ยืนยัน email</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/auth/me</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>ดูโปรไฟล์ตัวเอง</td></tr>
+      </table>
+
+      <!-- Flow -->
+      <div class="flow-wrap">
+        <div class="flow-title">Login Flow</div>
+        <pre class="flow-text">POST /api/auth/login  { email, password }
+  │
+  ├─[rate limit]─ เกิน 5 req/15min? ──→ 429
+  │
+  ▼
+  Find user by email
+  │
+  ├─ ไม่พบ ──────────────────────────→ 401 Invalid email or password
+  │
+  ├─ status = false ─────────────────→ 403 Account disabled
+  │
+  ├─ verifyPassword() ผิด ───────────→ 401 Invalid email or password
+  │
+  ▼
+  Sign Access Token + Refresh Token  (Promise.all parallel)
+  │
+  ▼
+  Redis: SET rt:{userId}  TTL 7d  (overwrite single session)
+  │
+  ▼
+  ตรวจ pending_policy_ids  (active policies ที่ยังไม่ยอมรับ)
+  │
+  ▼
+  200  { access_token, refresh_token, user, pending_policy_ids }
+
+  ⚠  pending_policy_ids ไม่ว่าง → frontend ต้อง redirect หน้า accept policy ก่อน</pre>
+      </div>
+
+      <!-- Endpoint detail cards -->
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/auth/register</code><span class="ep-tag rl">RL 10/min</span><span class="ep-card-desc">สมัครสมาชิก</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "email": "user@example.com",
+  "password": "min8chars",
+  "first_name": "สมชาย",
+  "last_name": "ใจดี",
+  "phone": "0812345678",
+  "address1": "123/45 ถ.สุขุมวิท",
+  "address2": "ห้อง 101",
+  "address3": "แขวงคลองเตย",
+  "address4": "เขตคลองเตย",
+  "address5": "10110",
+  "address6": "กรุงเทพมหานคร",
+  "policy_ids": [1, 2]
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "message": "Registration successful. Please verify your email."
+}</pre><div class="ep-errors"><span>400</span> ต้องยอมรับทุก policy<br><span>409</span> Email ซ้ำ</div></div>
+          </div>
+          <div class="ep-note">💡 <code>policy_ids</code> ต้องครอบคลุมทุก active policy (ดูจาก GET /api/policies/active ก่อน)</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/auth/login</code><span class="ep-tag rl">RL 5/15min</span><span class="ep-card-desc">เข้าสู่ระบบ → JWT tokens</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "email": "user@example.com",
+  "password": "mypassword"
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "access_token": "eyJ...",
+    "refresh_token": "eyJ...",
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "role": "users",
+      "is_verify": true
+    },
+    "pending_policy_ids": []
+  }
+}</pre><div class="ep-errors"><span>401</span> Invalid email or password<br><span>403</span> Account disabled</div></div>
+          </div>
+          <div class="ep-note">💡 เก็บ access_token ใน memory (ไม่ใส่ localStorage) · refresh_token ใน httpOnly cookie · ถ้า pending_policy_ids ไม่ว่าง → redirect ไปหน้า accept policy ก่อน</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/auth/refresh</code><span class="ep-card-desc">ต่ออายุ access token</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "refresh_token": "eyJ..." }</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "access_token": "eyJ..." }
+}</pre><div class="ep-errors"><span>401</span> Invalid or expired refresh token</div></div>
+          </div>
+          <div class="ep-note">💡 เรียกเมื่อ API คืน 401 "Token expired" → ใช้ refresh token ต่ออายุ → retry request เดิม</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/auth/verify/:token</code><span class="ep-card-desc">ยืนยัน email (จาก link ในเมล)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Path Param</div><pre class="ep-pre">:token — JWT จาก verification email</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "message": "Email verified successfully." }</pre><div class="ep-errors"><span>400</span> Invalid or expired token</div></div>
+          </div>
+          <div class="ep-note">💡 URL ในเมลมี token ฝังมาแล้ว เรียก GET endpoint นี้ตรงๆ ไม่ต้องส่ง body</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/auth/logout</code><span class="ep-card-desc">ออกจากระบบ — blocklist access token</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Headers</div><pre class="ep-pre">Authorization: Bearer {access_token}</pre><div class="ep-pane-title" style="margin-top:8px">Body</div><pre class="ep-pre">ไม่มี</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "message": "Logged out successfully." }</pre></div>
+          </div>
+          <div class="ep-note">💡 หลัง logout → ลบ token ออกจาก memory ทันที · access token ที่เหลืออายุจะถูก blocklist ใน Redis ไม่สามารถใช้ได้อีก</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/auth/me</code><span class="ep-card-desc">ดู session user ปัจจุบัน</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Headers</div><pre class="ep-pre">Authorization: Bearer {access_token}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "role": "users",
+    "status": true,
+    "is_verify": true
+  }
+}</pre></div>
+          </div>
+        </div>
+
+      </div><!-- /ep-cards -->
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F2 Account -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f2">
+    <div class="section-head">
+      <div class="section-icon">👤</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F2 — Account Management</div>
+        <div class="section-sub">Profile · Password · Email · Admin User Management</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 1–2</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <ul class="feature-list">
+        <li>User ดู/แก้โปรไฟล์ตัวเอง (first_name, last_name, phone, address)</li>
+        <li>เปลี่ยน password (ต้องใส่ password เดิม)</li>
+        <li>เปลี่ยน email (ต้อง verify ใหม่)</li>
+        <li>Admin: list users + pagination + filter</li>
+        <li>Admin: enable/disable user account</li>
+        <li>Admin: เปลี่ยน role</li>
+        <li>Support: ดูและแก้ user (ยกเว้น role)</li>
+      </ul>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/users/me</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>ดูโปรไฟล์พร้อม users_info</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/users/me</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>แก้ข้อมูลส่วนตัว</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/users/me/password</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>เปลี่ยน password</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/users/me/email</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>เปลี่ยน email</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/users</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>List ทุก user + pagination</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/users/:id</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>ดู user ตาม ID</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/users/:id</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>แก้ข้อมูล user</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/users/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle user status</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/users/:id/role</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>เปลี่ยน role</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/users/me</code><span class="ep-card-desc">ดูโปรไฟล์ตัวเอง (เต็ม)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Headers</div><pre class="ep-pre">Authorization: Bearer {access_token}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 1, "email": "...", "status": true,
+    "is_verify": true, "created_at": "...",
+    "role": { "role_name": "users" },
+    "users_info": {
+      "first_name": "สมชาย", "last_name": "ใจดี",
+      "phone": "081...", "address1": "...", ...
+    }
+  }
+}</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-put">PUT</span><code class="path">/api/users/me</code><span class="ep-card-desc">แก้ข้อมูลส่วนตัว (optional fields)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body (ทุก field optional)</div><pre class="ep-pre">{
+  "first_name": "สมหญิง",
+  "last_name": "ใจดี",
+  "phone": "0898765432",
+  "address1": "...", "address2": "...",
+  "address3": "...", "address4": "...",
+  "address5": "...", "address6": "..."
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { ...updated users_info... }
+}</pre></div>
+          </div>
+          <div class="ep-note">💡 ส่งเฉพาะ field ที่ต้องการเปลี่ยน field ที่ไม่ส่งจะไม่ถูกแตะ</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-put">PUT</span><code class="path">/api/users/me/password</code><span class="ep-card-desc">เปลี่ยน password</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "current_password": "oldpass",
+  "new_password": "newpass123"
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "message": "Password changed successfully." }</pre><div class="ep-errors"><span>401</span> Wrong current password<br><span>400</span> OAuth account (ไม่มี password)</div></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-put">PUT</span><code class="path">/api/users/me/email</code><span class="ep-card-desc">เปลี่ยน email → force logout</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "email": "newemail@example.com" }</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "message": "Email updated. Please verify your new email address. You have been logged out." }</pre><div class="ep-errors"><span>409</span> Email ซ้ำ</div></div>
+          </div>
+          <div class="ep-note">⚠️ หลัง success → session ถูก invalidate ทันที → redirect ไปหน้า login</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/users</code><span class="ep-card-desc">List ทุก user (Admin/Support)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Query Params</div><pre class="ep-pre">?page=1&limit=20   (limit max 100)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "users": [ { "id":1, "email":"...", "role":"users", "status":true, ... } ],
+    "total": 42, "page": 1, "limit": 20
+  }
+}</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/users/:id/status</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Toggle enable/disable user</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Path Param</div><pre class="ep-pre">:id — user ID (integer)</pre><div class="ep-pane-title" style="margin-top:8px">Body</div><pre class="ep-pre">ไม่มี (toggle อัตโนมัติ)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "id": 1, "email": "...", "status": false }
+}</pre></div>
+          </div>
+          <div class="ep-note">💡 สถานะจะ toggle อัตโนมัติ — ถ้า true→false, false→true · Redis user_status cache ถูก invalidate ทันที</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/users/:id/role</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">เปลี่ยน role</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "role_name": "support" }
+// valid: "admin" | "support" | "users"</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "id": 1, "email": "...", "role": { "role_name": "support" } }
+}</pre><div class="ep-errors"><span>400</span> role_name ไม่ถูกต้อง</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F3 Package -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f3">
+    <div class="section-head">
+      <div class="section-icon">📦</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F3 — Package Management</div>
+        <div class="section-sub">OS Templates · VM Specs · Packages · port_count (NAT) · category_id (F13)</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 2</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <ul class="feature-list">
+            <li>Package = OS template + VM spec + ราคา + period</li>
+            <li>Admin CRUD package, OS, VM spec</li>
+            <li>Toggle status (active/inactive)</li>
+            <li>User ดู active packages ทั้งหมด</li>
+            <li>Package มี <code>category_id</code> optional (ดู F13)</li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-box">
+            <strong>port_count (Int?)</strong><br>
+            <code>null</code> = Public IP (direct access)<br>
+            <code>N</code> = Private IP + NAT port block ขนาด N ผ่าน MikroTik CHR (ดู F11)<br><br>
+            <strong>category_id (Int?)</strong><br>
+            optional FK → package_categories (ดู F13)
+          </div>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>List active packages (optional <code>?category_id=N</code>)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/:id</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>รายละเอียด package</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/packages</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>สร้าง package ใหม่</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/packages/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ package</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/packages/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle status</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/categories</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>List active categories (ดู F13)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/categories/all</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List ทุก category รวม inactive</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/packages/categories</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>สร้าง category</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/packages/categories/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ category</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/packages/categories/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle category status</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/os</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List OS templates</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/packages/os</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>เพิ่ม OS template</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/packages/os/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ OS template</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/vm</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List VM specs</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/packages/vm</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>เพิ่ม VM spec</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/packages/vm/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ VM spec</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/packages</code><span class="ep-card-desc">List active packages (Public)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">ไม่มี params</div><pre class="ep-pre">ไม่ต้อง auth</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": [
+    {
+      "id": 1, "name": "Basic VPS",
+      "description": "...", "price": 299,
+      "period": 30, "status": true,
+      "port_count": null,
+      "os": { "os_name": "Ubuntu", "os_version": "22.04 LTS", "vmid": 21024 },
+      "vm": { "core": 2, "memory": "4GB", "size": "40GB" }
+    }
+  ]
+}</pre><div class="ep-note" style="margin-top:8px">💡 port_count: null = Public IP, N = Private IP + NAT N ports</div></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/packages</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">สร้าง package (Admin)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "name": "Basic VPS",
+  "description": "2 vCPU, 4GB RAM",
+  "price": 299,
+  "period": 30,
+  "os_id": 1,
+  "vm_id": 1,
+  "port_count": null
+  // port_count: null=Public IP, N=NAT N ports
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{ "success": true, "data": { ...package... } }</pre><div class="ep-errors"><span>400</span> os_id / vm_id ไม่พบ</div></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/packages/os</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">เพิ่ม OS template</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "os_name": "Ubuntu",
+  "os_version": "22.04 LTS",
+  "vmid": 21024
+  // vmid = Proxmox template VM ID
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{ "success": true, "data": { "id": 1, "os_name": "Ubuntu", ... } }</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/packages/vm</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">เพิ่ม VM spec</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "core": 2,
+  "memory": "4GB",
+  "size": "40GB"
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{ "success": true, "data": { "id": 1, "core": 2, ... } }</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/packages/:id/status</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Toggle package active/inactive</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี (toggle อัตโนมัติ)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "data": { "id": 1, "status": false } }</pre><div class="ep-errors"><span>404</span> ไม่พบ package</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F4 PDPA -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f4">
+    <div class="section-head">
+      <div class="section-icon">📋</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F4 — PDPA & Terms of Service</div>
+        <div class="section-sub">Policy Versioning · Consent Records · Compliance Audit</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 2</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <ul class="feature-list">
+        <li>Policy 2 ประเภท: <code>PDPA</code> และ <code>TERMSERVICE</code></li>
+        <li>Versioning — Admin สร้าง version ใหม่ได้เสมอ</li>
+        <li>User/Support ต้อง accept ทุก active policy ก่อน register</li>
+        <li>ตรวจ login ว่ามี policy version ใหม่ที่ยังไม่ยอมรับหรือไม่</li>
+        <li>Consent record immutable (ไม่ update/delete ได้)</li>
+        <li>ประวัติ consent เก็บใน <code>consents</code> table</li>
+      </ul>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/policies/active</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>List active policies</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/policies</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List ทุก policy + versions</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/policies</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>สร้าง policy version ใหม่</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/policies/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้เนื้อหา policy</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/policies/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle status</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/policies/consents</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>ยอมรับ policy</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/policies/consents/me</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>ดูประวัติ consent ตัวเอง</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/policies/active</code><span class="ep-card-desc">ดึง active policies (Public — ใช้ตอน register)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">ไม่มี params</div><pre class="ep-pre">ไม่ต้อง auth</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": [
+    { "id": 1, "title": "นโยบายความเป็นส่วนตัว", "type": "PDPA", "version": "1.0", "detail": "..." },
+    { "id": 2, "title": "ข้อตกลงการใช้บริการ", "type": "TERMSERVICE", "version": "1.0", "detail": "..." }
+  ]
+}</pre></div>
+          </div>
+          <div class="ep-note">💡 เรียกก่อนหน้า register เสมอ → เอา id ทุกอันใส่ใน policy_ids ตอน POST /api/auth/register</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/policies/consents</code><span class="ep-card-desc">ยอมรับ policy (ใช้หลัง login เจอ pending_policy_ids)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "policy_id": 3 }
+// ส่งทีละ 1 id</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{ "success": true }</pre><div class="ep-errors"><span>400</span> Policy ไม่ active<br><span>409</span> Consent มีแล้ว</div></div>
+          </div>
+          <div class="ep-note">💡 Loop ส่ง consent ทุก id ใน pending_policy_ids ก่อนดำเนินการต่อ</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/policies</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">สร้าง policy version ใหม่ (Admin)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "policie_title": "นโยบายความเป็นส่วนตัว v2",
+  "policies_detail": "เนื้อหา...",
+  "policies_type": "PDPA",
+  "version": "2.0"
+}
+// policies_type: "PDPA" | "TERMSERVICE"</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{ "success": true, "data": { "id": 5, ... } }</pre></div>
+          </div>
+          <div class="ep-note">⚠️ Policy ใหม่ที่ active → user ทุกคนเห็น pending_policy_ids ตอน login ครั้งถัดไป</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F5 VPS -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f5">
+    <div class="section-head">
+      <div class="section-icon">🖥️</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F5 — VPS Management</div>
+        <div class="section-sub">Proxmox VE Integration · IP Pool · Provisioning · Auto-Expiry</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 4–5</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Provisioning Flow</div>
+          <div class="info-box green">
+            Order PAID → <code>temp_vps</code> created → Proxmox clone template → cloud-init → start VM → <code>vps</code> record created → <code>temp_vps</code> deleted
+          </div>
+          <ul class="feature-list">
+            <li>Fire-and-forget async provisioning</li>
+            <li>Admin retry manual: <code>POST /api/vps/provision/:orderId</code></li>
+            <li>Queue view: <code>GET /api/vps/queue</code></li>
+          </ul>
+        </div>
+        <div>
+          <div class="sub-title">IP Pool</div>
+          <ul class="feature-list">
+            <li>2 ประเภท: <code>PUBLIC</code> (direct access), <code>PRIVATE</code> (NAT)</li>
+            <li>เพิ่ม IP ทีละ 1 หรือ bulk range (max 256)</li>
+            <li>IP ซ้ำ → skip อัตโนมัติ</li>
+            <li>ตรวจ allocated ก่อน assign</li>
+          </ul>
+          <div class="sub-title" style="margin-top:14px">Lifecycle</div>
+          <ul class="feature-list">
+            <li>Soft delete (<code>deleted_at</code>) ไม่ hard delete</li>
+            <li>Auto expire ด้วย cron (7-day grace period)</li>
+            <li>Force delete ทันที (Admin only)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/vps</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>List VPS (User เห็นของตัวเอง)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/vps/:id</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>รายละเอียด VPS + NAT info</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/vps/queue</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Provisioning queue</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/provision/:orderId</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Retry provisioning</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/start</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Start VPS</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/stop</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Stop VPS</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/reboot</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Reboot VPS</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/renew</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>ต่ออายุ VPS (รับ promo_code)</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/vps/:id/auto-renew</td><td><div class="roles"><span class="role r-owner">Owner</span></div></td><td>Toggle auto-renew + locked promo</td></tr>
+        <tr><td><span class="method m-delete">DELETE</span></td><td class="path">/api/vps/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Force delete ทันที</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/ip-pools</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List IP pool</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/ip-pools</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>เพิ่ม IP เดียว</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/ip-pools/range</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Bulk add IP range (max 256)</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/ip-pools/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ IP entry</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/ip-pools/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle IP status</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/vps/:id/status</td><td><div class="roles"><span class="role r-owner">Owner</span></div></td><td class="deferred">⏸ Deferred — ยังไม่ implement</td></tr>
+      </table>
+
+      <!-- Provisioning Flow -->
+      <div class="flow-wrap">
+        <div class="flow-title">VPS Provisioning Flow (หลัง Payment สำเร็จ)</div>
+        <pre class="flow-text">Transaction PAID  (TrueMoney / Slip auto) หรือ Admin approve (PromptPay)
+  │
+  ▼
+  สร้าง temp_vps record  (mark ว่ามี order รอ provision)
+  │
+  ▼
+  provision()  [fire-and-forget — server ตอบ response ทันที ไม่รอ]
+  │
+  ▼
+  Proxmox: clone template VM  (vmid จาก package.os.vmid)
+  │
+  ▼
+  cloud-init inject:  IP, gateway, subnet, root password, hostname, user
+  │
+  ▼
+  Start VM  →  poll Proxmox task  (timeout 60s)
+  │
+  ▼
+  Assign IP จาก ip_pools  (status=true, ยังไม่ถูก assign)
+  │
+  ├─ PRIVATE IP package ──→  natService.allocate()  →  สร้าง nat_allocation + system port rule
+  │
+  ▼
+  สร้าง vps record  +  ip_assignments record
+  │
+  ▼
+  ลบ temp_vps record  ✓ provision สำเร็จ
+
+  ✗ ถ้าล้มเหลวที่ขั้นตอนใด:
+    temp_vps ยังอยู่ → ดูที่ GET /api/vps/queue
+    Admin retry → POST /api/vps/provision/:orderId</pre>
+      </div>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/vps</code><span class="ep-card-desc">List VPS (User เห็นของตัวเอง, Admin/Support เห็นทั้งหมด)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Query Params</div><pre class="ep-pre">?page=1&limit=20   (limit max 100)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "vps": [
+      { "id": 1, "name": "cloudvps-1", "vmid": 201,
+        "status": true, "expired_at": "...",
+        "ip": "198.51.100.10",
+        "order": { "ref_no": "QC-...", "package": { "name": "Basic VPS" } }
+      }
+    ],
+    "total": 3, "page": 1, "limit": 20
+  }
+}</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/vps/:id</code><span class="ep-card-desc">รายละเอียด VPS + live status + NAT info</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Path Param</div><pre class="ep-pre">:id — VPS ID (integer)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 1, "name": "cloudvps-1", "vmid": 201,
+    "status": true, "ip": "198.51.100.10",
+    "created_at": "...", "expired_at": "...",
+    "order": { "ref_no": "QC-...", "package": { "name": "Basic VPS" } },
+    "live_status": {
+      "status": "running", "cpu": 0.02,
+      "mem": 524288000, "maxmem": 2147483648, "uptime": 3600
+    },
+    "nat": null
+    // nat: null = Public IP
+    // nat: { nat_allocation, port_rules } = Private IP
+  }
+}</pre><div class="ep-errors"><span>403</span> ไม่ใช่เจ้าของ<br><span>404</span> ไม่พบ</div></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/vps/:id/start</code><span class="ep-tag rl">RL 10/min</span><span class="ep-tag audit">Audit (Admin/Support)</span><span class="ep-card-desc">Start VPS</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "data": { "id": 1, "vmid": 201, "status": "running" } }</pre><div class="ep-errors"><span>502</span> Proxmox error</div></div>
+          </div>
+          <div class="ep-note">💡 poll Proxmox task 60 วิ — ถ้าเกิน timeout จะ error 502</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/vps/:id/stop</code><span class="ep-tag rl">RL 10/min</span><span class="ep-card-desc">Graceful shutdown (poll 120s)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "data": { "id": 1, "vmid": 201, "status": "stopped" } }</pre></div>
+          </div>
+          <div class="ep-note">⚠️ timeout 120s (graceful shutdown อาจช้า) — ถ้า timeout เกิน คืน 502</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-delete">DELETE</span><code class="path">/api/vps/:id</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Force delete ทันที (Admin only)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "message": "VPS deleted successfully." }</pre><div class="ep-errors"><span>500</span> IP release fail (critical)</div></div>
+          </div>
+          <div class="ep-note">⚠️ ข้าม grace period 7 วัน — ลบ Proxmox VM, คืน IP, soft-delete record, ส่งเมลแจ้ง user ทันที</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/ip-pools</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">เพิ่ม IP เดียว</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "ip": "198.51.100.20",
+  "type": "PUBLIC"
+  // type: "PUBLIC" | "PRIVATE"
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{ "success": true, "data": { "id": 6, "ip": "198.51.100.20", ... } }</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/ip-pools/range</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Bulk add IP range (max 256)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "ip_start": "192.168.1.100",
+  "ip_end": "192.168.1.200",
+  "type": "PRIVATE"
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "added": 98, "skipped": 3, "ips": [...] }
+}</pre><div class="ep-errors"><span>400</span> range เกิน 256 / ip_start &gt; ip_end</div></div>
+          </div>
+          <div class="ep-note">💡 IP ที่มีอยู่แล้ว → skip อัตโนมัติ ไม่ error</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F6 Orders & Payment -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f6">
+    <div class="section-head">
+      <div class="section-icon">💳</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F6 — Orders & Payment</div>
+        <div class="section-sub">TrueMoney · SlipOK · PromptPay · Promotions</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 3</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Payment Methods</div>
+          <table class="api-table">
+            <tr><th>ช่องทาง</th><th>การยืนยัน</th></tr>
+            <tr><td>💛 TrueMoney Angpao</td><td>Auto-verify ผ่าน TrueMoney API</td></tr>
+            <tr><td>🧾 Slip (SlipOK)</td><td>Auto-verify ผ่าน SlipOK API</td></tr>
+            <tr><td>📱 PromptPay QR</td><td>Manual approve โดย Admin/Support</td></tr>
+          </table>
+        </div>
+        <div>
+          <div class="sub-title">Promotions</div>
+          <ul class="feature-list">
+            <li>Type: <code>DISCOUNT</code> (ลดตามจำนวน) และ <code>PERCENT</code> (ลดเปอร์เซ็นต์)</li>
+            <li>กำหนด expiry date ได้</li>
+            <li>จำกัดการใช้: <code>max_uses</code> (global) + <code>max_uses_per_user</code></li>
+            <li>Error: <code>PROMO_LIMIT_REACHED</code> / <code>PROMO_USER_LIMIT_REACHED</code> (409)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/orders</td><td><div class="roles"><span class="role r-user">User</span></div></td><td>สร้าง order (รับ promo_code)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/orders</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>List orders</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/orders/:id</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>รายละเอียด order</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/orders/:id/cancel</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span></div></td><td>ยกเลิก order (ไม่ได้ถ้าเป็น upgrade)</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/transactions</td><td><div class="roles"><span class="role r-user">User</span></div></td><td>ชำระเงิน (ส่ง slip/angpao/promptpay)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/transactions</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>List transactions</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/transactions/:id/approve</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Approve PromptPay</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/transactions/:id/reject</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Reject PromptPay</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/promotions</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>สร้าง promo code</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/promotions</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List promotions</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/promotions/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ promotion</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/promotions/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle status</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/promotions/validate</td><td><div class="roles"><span class="role r-user">Auth</span></div></td><td>ตรวจสอบ promo code ก่อนใช้</td></tr>
+      </table>
+
+      <!-- Payment Flow -->
+      <div class="flow-wrap">
+        <div class="flow-title">Order → Payment → VPS Flow</div>
+        <pre class="flow-text">POST /api/orders  { package_id, promo_code? }
+  │
+  ▼
+  Order PENDING  (ref_no: QC-YYYYMMDD-XXXXXX, หมดอายุใน 24h)
+  │
+  ▼
+POST /api/transactions  { order_id, payment_method, ... }
+  │
+  ├─[TRUEMONEY]──→  voucher_code  →  TrueMoney API redeem
+  │                                   ├─ amount ไม่ถึง order.amount ──→ 402
+  │                                   └─ ✓  →  SUCCESSFUL
+  │
+  ├─[SLIP]────────→  slip_image (base64, max 5MB)  →  SlipOK API verify
+  │                   ├─ amount mismatch (1013) ──────→ 402
+  │                   ├─ duplicate slip (1012) ───────→ 402
+  │                   ├─ wrong receiver (1014) ───────→ 402
+  │                   └─ ✓  →  SUCCESSFUL
+  │
+  └─[PROMPTPAY]───→  Transaction PENDING  (slip_image optional)
+                          │
+                          │  Admin/Support: PATCH /transactions/:id/approve
+                          ▼
+                      SUCCESSFUL
+                          │  Admin/Support: PATCH /transactions/:id/reject
+                          └─────────────────────────────────────→  REJECT
+
+  [SUCCESSFUL]
+  │
+  ▼
+  $transaction atomic:
+    transactions.status = SUCCESSFUL
+    orders.status       = PAID
+    สร้าง temp_vps record
+  │
+  ▼
+  provision()  [fire-and-forget]  →  VPS พร้อมใช้</pre>
+      </div>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/orders</code><span class="ep-card-desc">สร้าง order ก่อนจ่ายเงิน</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "package_id": 1,
+  "promo_code": "SAVE100"  // optional
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 1,
+    "ref_no": "QC-20260601-A1B2C3",
+    "amount": 199,
+    "status": "PENDING",
+    "expired_at": "2026-06-02T..."
+  }
+}</pre><div class="ep-errors"><span>400</span> package inactive / promo invalid<br><span>404</span> package ไม่พบ<br><span>409</span> promo limit reached</div></div>
+          </div>
+          <div class="ep-note">💡 amount คำนวณ server-side เสมอ — frontend ไม่ส่ง amount เอง</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/transactions</code><span class="ep-tag rl">RL 5/min</span><span class="ep-card-desc">ชำระเงิน (3 วิธี)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">// TrueMoney Angpao
+{
+  "order_id": 1,
+  "payment_method": "TRUEMONEY",
+  "voucher_code": "ABCDEF123"
+}
+
+// Slip (base64 image, max 5MB)
+{
+  "order_id": 1,
+  "payment_method": "SLIP",
+  "slip_image": "data:image/jpeg;base64,..."
+}
+
+// PromptPay (manual approve)
+{
+  "order_id": 1,
+  "payment_method": "PROMPTPAY",
+  "slip_image": "..."  // optional
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 5,
+    "status": "SUCCESSFUL",  // หรือ "PENDING" สำหรับ PROMPTPAY
+    "payment_method": "TRUEMONEY",
+    "amount": 199
+  }
+}</pre><div class="ep-errors"><span>400</span> Amount mismatch / slip too large<br><span>402</span> Payment verification failed<br><span>409</span> Duplicate payment</div></div>
+          </div>
+          <div class="ep-note">💡 PromptPay → status = PENDING → รอ Admin/Support approve → VPS จะถูก provision หลัง approve</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/transactions/:id/approve</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Approve PromptPay (Admin/Support)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "data": { "id": 5, "status": "SUCCESSFUL" } }</pre><div class="ep-errors"><span>400</span> ไม่ใช่ PROMPTPAY หรือ status ไม่ใช่ PENDING</div></div>
+          </div>
+          <div class="ep-note">💡 หลัง approve → provision() fire-and-forget ทันที</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/transactions/:id/reject</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Reject PromptPay (Admin/Support)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "reason": "slip ไม่ชัด" }</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "data": { "id": 5, "status": "REJECT" } }</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/promotions/validate</code><span class="ep-card-desc">ตรวจสอบ promo code (ก่อน create order)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "code": "NEWUSER50" }</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 1, "code_name": "NEWUSER50",
+    "type": "PERCENT",  // หรือ "DISCOUNT"
+    "discount": 10,
+    "description": "ลด 10%"
+  }
+}</pre><div class="ep-errors"><span>400</span> ไม่พบ / inactive / expired</div></div>
+          </div>
+          <div class="ep-note">💡 เรียกเพื่อ preview ส่วนลดก่อน — ไม่บังคับ แต่ช่วย UX ให้ user เห็นราคาหลังลด</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/orders/:id/cancel</code><span class="ep-card-desc">ยกเลิก order (PENDING เท่านั้น)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "data": { "id": 1, "status": "CANCEL" } }</pre><div class="ep-errors"><span>400</span> PAID / ยกเลิกแล้ว / expired<br><span>403</span> ไม่ใช่เจ้าของ</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F7 Support -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f7">
+    <div class="section-head">
+      <div class="section-icon">💬</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F7 — Support System</div>
+        <div class="section-sub">External Facebook Fanpage (ไม่มี in-app ticket)</div>
+        <div class="badges">
+          <span class="badge badge-gray">External Only</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="info-box orange">
+        User ติดต่อ support ผ่าน Facebook Fanpage (ภายนอก). ระบบไม่มี ticket system ในตัว.
+        <code>GET /api/support/contact</code> ⏸ deferred — ยังไม่ implement.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F8 System Config -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f8">
+    <div class="section-head">
+      <div class="section-icon">⚙️</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F8 — System Config Management</div>
+        <div class="section-sub">18 Keys · Redis Cache 60s · Runtime-Editable</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 4</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <ul class="feature-list">
+            <li>Config keys pre-seeded — ไม่สร้าง key ใหม่ผ่าน API</li>
+            <li>Admin แก้ค่า runtime ได้โดยไม่ restart server</li>
+            <li>Cache ใน Redis (TTL 60 วิ)</li>
+            <li>Secret fields masked เป็น <code>***</code> ใน response</li>
+            <li>Set ค่าเป็น <code>null</code> = fallback ไปใช้ <code>.env</code></li>
+            <li>ทุก update บันทึก audit log <code>UPDATE SYSTEM_CONFIG</code></li>
+          </ul>
+        </div>
+        <div>
+          <div class="sub-title">18 Keys แบ่ง 3 หมวด</div>
+          <table class="api-table">
+            <tr><th>Category</th><th>จำนวน</th><th>ตัวอย่าง</th></tr>
+            <tr><td>Proxmox / Provisioning</td><td>10</td><td>proxmox.host, proxmox.bridge</td></tr>
+            <tr><td>mikrotik</td><td>5</td><td>mikrotik.host, mikrotik.nat_public_ip</td></tr>
+            <tr><td>pricing</td><td>3</td><td>pricing.cpu_per_core, pricing.ram_per_gib</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/system-configs</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>List ทุก config (secrets masked)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/system-configs/:key</td><td><div class="roles"><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>ดู config ตาม key</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/system-configs/:key</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ค่า config</td></tr>
+        <tr><td><span class="method m-delete">DELETE</span></td><td class="path">/api/system-configs/cache/flush</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Flush Redis cache</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/system-configs</code><span class="ep-card-desc">List ทุก config (secrets masked)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">ไม่มี body/params</div><pre class="ep-pre">Admin หรือ Support เท่านั้น</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": [
+    { "id": 1, "key": "proxmox.host", "value": "10.0.0.1", "category": "proxmox", "is_secret": false },
+    { "id": 3, "key": "proxmox.token_secret", "value": "***", "category": "proxmox", "is_secret": true }
+  ]
+}</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-put">PUT</span><code class="path">/api/system-configs/:key</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">แก้ค่า config (Admin) — มีผลทันที</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "value": "10.0.0.2" }
+// ส่ง null เพื่อ reset → ใช้ .env fallback
+{ "value": null }</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{ "success": true, "message": "Config updated." }</pre><div class="ep-errors"><span>404</span> key ไม่มีใน DB</div></div>
+          </div>
+          <div class="ep-note">💡 แก้แล้ว Redis cache ถูก invalidate ทันที — server อ่านค่าใหม่ภายใน 60s</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-delete">DELETE</span><code class="path">/api/system-configs/cache/flush</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Flush Redis cache ทั้งหมด (Admin)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Body</div><pre class="ep-pre">ไม่มี</pre><div class="ep-pane-title" style="margin-top:8px">Patterns ที่ flush</div><pre class="ep-pre">rl:*           — rate limit counters
+syscfg:*       — system config cache
+user_status:*  — user status cache
+provision_lock:* — provision locks
+// ไม่ flush: rt:* (refresh tokens), token_block:* (blocklist)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "message": "Flushed 12 Redis key(s).",
+  "data": {
+    "deleted": 12,
+    "patterns": ["rl:*", "syscfg:*", "user_status:*", "provision_lock:*"]
+  }
+}</pre></div>
+          </div>
+          <div class="ep-note">💡 ใช้เมื่อ: rate limit ติดค้าง / config cache เก่า / user status ไม่อัพเดต / provision lock ค้าง</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F9 Broadcast -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f9">
+    <div class="section-head">
+      <div class="section-icon">📢</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F9 — Email Broadcast</div>
+        <div class="section-sub">MAINTENANCE · EMERGENCY · ANNOUNCEMENT · 3 Target Scopes</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 5</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Event Types</div>
+          <ul class="feature-list">
+            <li>🔧 <code>MAINTENANCE</code> — แจ้งปิดปรับปรุง</li>
+            <li>🚨 <code>EMERGENCY</code> — แจ้งเหตุฉุกเฉิน</li>
+            <li>📣 <code>ANNOUNCEMENT</code> — ประกาศทั่วไป</li>
+          </ul>
+          <div class="sub-title" style="margin-top:14px">Target Scopes</div>
+          <ul class="feature-list">
+            <li><code>ALL</code> — ทุก user ที่ verify แล้ว</li>
+            <li><code>ACTIVE_VPS</code> — user ที่มี VPS รัน</li>
+            <li><code>EXPIRING_SOON</code> — user ที่ VPS หมดใน 14 วัน</li>
+          </ul>
+        </div>
+        <div>
+          <ul class="feature-list">
+            <li>HTML template ตาม event type (color-coded header)</li>
+            <li>ส่งด้วย <code>Promise.allSettled</code> (ไม่บล็อกถ้าบางคนรับไม่ได้)</li>
+            <li>บันทึก <code>sent_count</code> / <code>failed_count</code></li>
+            <li>Rate limit: 5 ครั้ง/ชั่วโมง</li>
+            <li>ทุก broadcast audit log <code>BROADCAST EMAIL_BROADCAST</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/broadcasts</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>ส่ง broadcast (rate-limit 5/hr)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/broadcasts</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>ประวัติ broadcast + pagination</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/broadcasts/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>รายละเอียด broadcast</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/broadcasts</code><span class="ep-tag rl">RL 5/hr</span><span class="ep-tag audit">Audit</span><span class="ep-card-desc">ส่ง broadcast email</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "subject": "[แจ้งปิดปรับปรุง] CloudVPS",
+  "body": "ระบบจะปิดปรับปรุง...\nเวลา 02:00–04:00 น.",
+  "type": "MAINTENANCE",
+  "target": "ACTIVE_VPS"
+}
+// type: "MAINTENANCE" | "EMERGENCY" | "ANNOUNCEMENT"
+// target:
+//   "ALL"           — user verify แล้วทุกคน
+//   "ACTIVE_VPS"    — user ที่มี VPS รัน
+//   "EXPIRING_SOON" — VPS หมดอายุใน 14 วัน</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "broadcastId": 1,
+    "sentCount": 42,
+    "failedCount": 0
+  }
+}</pre><div class="ep-errors"><span>429</span> Rate limit (5/hr)<br><span>500</span> Broadcast failed</div></div>
+          </div>
+          <div class="ep-note">💡 \n ใน body → แปลงเป็น &lt;br&gt; ใน HTML email อัตโนมัติ · header สี: MAINTENANCE=#f59e0b, EMERGENCY=#ef4444, ANNOUNCEMENT=#7c3aed</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F10 Promo Limits & Auto-Renew -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f10">
+    <div class="section-head">
+      <div class="section-icon">🔁</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F10 — Promo Limits & Auto-Renew</div>
+        <div class="section-sub">Usage Caps · Daily Cron · Locked Promo</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 7</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Promo Usage Limits</div>
+          <ul class="feature-list">
+            <li><code>max_uses</code> — global cap (null = unlimited)</li>
+            <li><code>max_uses_per_user</code> — per-user cap</li>
+            <li>ตรวจ atomic ใน DB transaction เมื่อสร้าง order</li>
+            <li><code>PROMO_LIMIT_REACHED</code> (409) ถ้า global เต็ม</li>
+            <li><code>PROMO_USER_LIMIT_REACHED</code> (409) ถ้า user เต็ม</li>
+          </ul>
+        </div>
+        <div>
+          <div class="sub-title">Auto-Renew</div>
+          <ul class="feature-list">
+            <li>Flag <code>auto_renew</code> บน VPS (default: false)</li>
+            <li><code>locked_promo_id</code> — promo ที่ lock ไว้ต่ออายุ</li>
+            <li>Cron รันทุกวัน 02:20 Asia/Bangkok</li>
+            <li>สร้าง order ล่วงหน้า 3 วันก่อนหมด</li>
+            <li>ถ้า promo ถูก disable → สร้าง order ราคาปกติ</li>
+            <li>ส่งอีเมล reminder อัตโนมัติ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints เพิ่มเติม (จาก F5)</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/vps/:id/auto-renew</td><td><div class="roles"><span class="role r-owner">Owner</span></div></td><td>Toggle auto-renew + set locked_promo_id</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/renew</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>ต่ออายุ manual (รับ promo_code)</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/vps/:id/renew</code><span class="ep-tag rl">RL 10/min</span><span class="ep-card-desc">ต่ออายุ VPS — สร้าง renewal order</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body (optional)</div><pre class="ep-pre">{ "promo_code": "SAVE10" }
+// ไม่มี promo_code ก็ได้</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 99, "ref_no": "QC-20260601-XYZ",
+    "amount": 299, "status": "PENDING",
+    "renewal_vps_id": 5,
+    "expired_at": "..."
+  }
+}</pre><div class="ep-errors"><span>409</span> มี pending renewal order อยู่แล้ว<br><span>404</span> VPS ถูกลบแล้ว</div></div>
+          </div>
+          <div class="ep-note">💡 Flow: สร้าง order → ชำระผ่าน POST /api/transactions → เมื่อ PAID ระบบ extend expired_at อัตโนมัติ (ไม่ต้อง provision ใหม่)</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/vps/:id/auto-renew</code><span class="ep-tag rl">RL 10/min</span><span class="ep-card-desc">ตั้ง auto-renew + locked promo</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "auto_renew": true,
+  "locked_promo_id": 3  // optional, null=ล้าง
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "id": 5, "auto_renew": true, "locked_promo_id": 3 }
+}</pre><div class="ep-errors"><span>400</span> promo ไม่พบหรือ inactive</div></div>
+          </div>
+          <div class="ep-note">💡 Cron รัน 02:20 ทุกวัน — ถ้า VPS หมดใน 3 วัน + auto_renew=true → สร้าง renewal order อัตโนมัติ + ส่งอีเมล</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F11 NAT -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f11">
+    <div class="section-head">
+      <div class="section-icon">🔀</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F11 — Port Forwarding / NAT</div>
+        <div class="section-sub">MikroTik CHR · Private IP VPS · Port Block Allocation</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 8</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Port Block Allocation</div>
+          <ul class="feature-list">
+            <li>ใช้เมื่อ <code>package.port_count > 0</code></li>
+            <li>Allocate consecutive port block ขนาด <code>port_count</code> จาก NAT public IP</li>
+            <li>เก็บใน <code>nat_allocations</code> table</li>
+          </ul>
+          <div class="sub-title" style="margin-top:14px">System Port (Auto-Created)</div>
+          <ul class="feature-list">
+            <li>Linux (Ubuntu/Debian) → port 22 (SSH)</li>
+            <li>Windows Server → port 3389 (RDP)</li>
+            <li>มี flag <code>is_system=true</code> — ลบโดย user ทั่วไปไม่ได้</li>
+          </ul>
+        </div>
+        <div>
+          <div class="sub-title">User Port Rules</div>
+          <ul class="feature-list">
+            <li>User ระบุแค่ <code>private_port</code> + <code>protocol</code> (TCP/UDP/BOTH)</li>
+            <li>ระบบ assign <code>public_port</code> ถัดไปใน block อัตโนมัติ</li>
+            <li>จำนวน rule สูงสุด = <code>package.port_count</code></li>
+            <li>สร้าง DST-NAT rules ใน MikroTik ผ่าน REST API</li>
+          </ul>
+          <div class="sub-title" style="margin-top:14px">RBAC</div>
+          <table class="api-table">
+            <tr><th>Role</th><th>สิทธิ์</th></tr>
+            <tr><td><span class="role r-owner">Owner</span></td><td>CRUD rules VPS ตัวเอง (ลบ system rule ไม่ได้)</td></tr>
+            <tr><td><span class="role r-admin">Admin</span></td><td>CRUD rules ทุก VPS รวมถึง system rules</td></tr>
+            <tr><td><span class="role r-support">Support</span></td><td>Read-only เท่านั้น</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="info-box purple">
+        <strong>Cleanup:</strong> เมื่อ VPS ถูกลบ (force หรือ expire) → <code>natService.releaseAll(vpsId)</code> → ลบ MikroTik rules + mark inactive → คืน Private IP
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/vps/:id/port-rules</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>List port rules + allocation info</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/port-rules</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span></div></td><td>เพิ่ม port rule (body: privateIp, privatePort, protocol)</td></tr>
+        <tr><td><span class="method m-delete">DELETE</span></td><td class="path">/api/vps/:id/port-rules/:ruleId</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span></div></td><td>ลบ port rule (user ลบ system rule ไม่ได้)</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/vps/:id/port-rules</code><span class="ep-card-desc">ดู NAT allocation + port rules ทั้งหมด</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">ไม่มี body/params</div><pre class="ep-pre">Auth required (Owner/Admin/Support)</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "nat_allocation": {
+    "public_ip": "203.0.113.10",
+    "port_start": 20000,
+    "port_end": 20009,
+    "used_count": 2,
+    "available_count": 8
+  },
+  "port_rules": [
+    { "id": 1, "public_port": 20000, "private_port": 22, "protocol": "TCP", "is_system": true },
+    { "id": 2, "public_port": 20001, "private_port": 8080, "protocol": "TCP", "is_system": false }
+  ]
+}</pre><div class="ep-errors"><span>404</span> NAT_NOT_FOUND (Public IP VPS)</div></div>
+          </div>
+          <div class="ep-note">💡 เฉพาะ VPS ที่มาจาก package ที่มี port_count &gt; 0 (Private IP) เท่านั้น</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/vps/:id/port-rules</code><span class="ep-card-desc">เพิ่ม port forwarding rule</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "privateIp": "172.16.1.1",
+  "privatePort": 8080,
+  "protocol": "TCP"
+  // protocol: "TCP" | "UDP" | "BOTH"
+  // BOTH = สร้าง 2 rules ใน MikroTik
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "id": 3,
+  "public_port": 20002,
+  "private_port": 8080,
+  "protocol": "TCP",
+  "is_system": false
+}</pre><div class="ep-errors"><span>409</span> PORT_LIMIT_REACHED<br><span>403</span> Support read-only</div></div>
+          </div>
+          <div class="ep-note">💡 public_port ถูก assign อัตโนมัติ (ถัดไปใน block) — ไม่ต้องระบุ</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-delete">DELETE</span><code class="path">/api/vps/:id/port-rules/:ruleId</code><span class="ep-card-desc">ลบ port rule</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Path Params</div><pre class="ep-pre">:id     — VPS ID
+:ruleId — nat_port_rules ID</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 204</div><pre class="ep-pre">No Content</pre><div class="ep-errors"><span>403</span> SYSTEM_RULE (user ลบ SSH/RDP ไม่ได้)<br><span>404</span> rule ไม่พบ</div></div>
+          </div>
+          <div class="ep-note">⚠️ System rules (SSH port 22, RDP port 3389) — Admin เท่านั้นที่ลบได้</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F12 Upgrade -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f12">
+    <div class="section-head">
+      <div class="section-icon">⬆️</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F12 — VM Reconfigure & Upgrade</div>
+        <div class="section-sub">Mode A: Package Switch · Mode B: Custom Resources · Pro-Rate Billing</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 9</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <div class="sub-title">Mode A — Package Switch</div>
+          <ul class="feature-list">
+            <li>เปลี่ยน package โดยไม่ reprovision</li>
+            <li>Upgrade (ราคาสูงขึ้น) → คิดค่า pro-rate ของวันที่เหลือ</li>
+            <li>Downgrade (ราคาต่ำลง/เท่ากัน) → เปลี่ยน spec ฟรี</li>
+            <li>สูตร: <code>ceil((price_delta × days_remaining) / period)</code></li>
+          </ul>
+          <div class="sub-title" style="margin-top:14px">Mode B — Custom Resources</div>
+          <ul class="feature-list">
+            <li>ระบุ <code>cores</code>, <code>memory_gib</code>, <code>disk_gb</code> ทีละหน่วย</li>
+            <li>ราคาจาก system_config: <code>pricing.cpu_per_core</code> ฯลฯ</li>
+            <li>เพิ่ม → คิดค่า pro-rate; ลด → ฟรี</li>
+            <li>Disk ลดไม่ได้ (Proxmox limitation)</li>
+          </ul>
+        </div>
+        <div>
+          <div class="sub-title">Apply Flow</div>
+          <div class="info-box green">
+            Amount &gt; 0 → PENDING → ชำระเงิน → <code>applyUpgrade()</code><br>
+            Amount = 0 → Auto-approve ทันที → <code>applyUpgrade()</code>
+          </div>
+          <ul class="feature-list">
+            <li>Acquire Redis lock (idempotent)</li>
+            <li>Proxmox: <code>updateVmResources</code> + <code>resizeDisk</code> + <code>rebootVm</code></li>
+            <li>Update <code>vps.current_*</code> + <code>monthly_price</code></li>
+            <li>User ยกเลิก upgrade order ที่ยัง PENDING ได้ (mark upgrade log เป็น failed) — แต่ order ที่ PAID/applied แล้วยกเลิกไม่ได้ (<code>CANNOT_CANCEL_UPGRADE</code>)</li>
+          </ul>
+          <div class="sub-title" style="margin-top:14px">Audit Trail</div>
+          <ul class="feature-list">
+            <li><code>vps_upgrade_logs</code> บันทึก before/after specs + amount_charged</li>
+            <li><code>applied_at</code> null = pending/failed; filled เมื่อ Proxmox สำเร็จ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/upgrade/package</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>เปลี่ยน package (body: package_id)</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/vps/:id/upgrade/custom</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>Custom resource (body: cores?, memory_gib?, disk_gb?)</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/vps/:id/upgrade/history</td><td><div class="roles"><span class="role r-owner">Owner</span><span class="role r-admin">Admin</span><span class="role r-support">Support</span></div></td><td>ประวัติ upgrade + pagination</td></tr>
+      </table>
+
+      <!-- Upgrade Flow -->
+      <div class="flow-wrap">
+        <div class="flow-title">Upgrade Flow</div>
+        <pre class="flow-text">POST /api/vps/:id/upgrade/package  { package_id }
+POST /api/vps/:id/upgrade/custom   { cores?, memory_gib?, disk_gb? }
+  │
+  ▼
+  คำนวณ pro-rate amount
+    Package:  ceil((price_delta × days_remaining) / period)
+    Custom:   Σ (unit_delta × price_per_unit × days_remaining / 30)
+              ราคาต่อหน่วยจาก system_configs: pricing.*
+  │
+  ├─[amount > 0  →  UPGRADE / เพิ่ม resource]
+  │     │
+  │     ▼
+  │     สร้าง Order PENDING
+  │     │
+  │     ▼
+  │     ชำระเงินปกติ (POST /api/transactions)
+  │     │
+  │     ▼
+  │     Transaction SUCCESSFUL  →  applyUpgrade()
+  │
+  └─[amount = 0  →  DOWNGRADE / ลด resource]
+        │
+        ▼
+        Auto-approve ทันที  →  applyUpgrade()
+
+  applyUpgrade():
+  │
+  ▼
+  Acquire Redis lock  (ป้องกัน duplicate apply)
+  │
+  ▼
+  Proxmox: updateVmResources (cores, memory)
+  │
+  ▼
+  Proxmox: resizeDisk  (ถ้า disk_gb เพิ่ม — ลดไม่ได้)
+  │
+  ▼
+  Proxmox: rebootVm
+  │
+  ▼
+  vps record:  current_cores, current_memory_gib, current_disk_gb, monthly_price  อัพเดต
+  vps_upgrade_log:  applied_at = now  ✓
+
+  ⚠  Upgrade order ที่ PAID/applied แล้ว ยกเลิกไม่ได้  (CANNOT_CANCEL_UPGRADE)
+  ✓  Upgrade order ที่ยัง PENDING ยกเลิกได้ (upgrade log ถูก mark failed)</pre>
+      </div>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/vps/:id/upgrade/package</code><span class="ep-card-desc">เปลี่ยน package (Mode A)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{ "package_id": 3 }</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "order": { "id": 10, "ref_no": "QC-...", "amount": 150, "status": "PENDING" },
+    "auto_approved": false,
+    "direction": "UPGRADE",
+    "before": { "cores": 2, "memory_gib": 4, "disk_gb": 50, "monthly_price": 499 },
+    "after":  { "cores": 4, "memory_gib": 8, "disk_gb": 100, "monthly_price": 799 },
+    "amount_charged": 150
+  }
+}</pre><div class="ep-errors"><span>400</span> OS_MISMATCH / NO_CHANGE / PACKAGE_INACTIVE<br><span>409</span> UPGRADE_PENDING</div></div>
+          </div>
+          <div class="ep-note">💡 Downgrade → amount=0 → auto_approved=true → apply ทันที ไม่ต้องจ่ายเงิน · Upgrade order ยกเลิกไม่ได้</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/vps/:id/upgrade/custom</code><span class="ep-card-desc">เพิ่ม/ลด resource ทีละหน่วย (Mode B)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body (อย่างน้อย 1 field)</div><pre class="ep-pre">{
+  "cores": 4,         // optional
+  "memory_gib": 8,    // optional
+  "disk_gb": 80       // optional (ลดไม่ได้)
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "order": { ... },
+    "auto_approved": false,
+    "amount_charged": 90
+  }
+}</pre><div class="ep-errors"><span>400</span> NO_CHANGE / DISK_SHRINK_NOT_ALLOWED<br><span>500</span> CONFIG_MISSING (pricing ไม่ได้ set)</div></div>
+          </div>
+          <div class="ep-note">💡 ราคาจาก system_configs: pricing.cpu_per_core, pricing.ram_per_gib, pricing.disk_per_gb · Admin ต้อง set ก่อนใช้ได้</div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/vps/:id/upgrade/history</code><span class="ep-card-desc">ประวัติ upgrade ทั้งหมด</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Query Params</div><pre class="ep-pre">?page=1&limit=20</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "logs": [
+      {
+        "id": 1, "upgrade_type": "PACKAGE",
+        "before_cores": 2, "after_cores": 4,
+        "amount_charged": 150,
+        "applied_at": "2026-05-16T...",  // null = pending/failed
+        "order": { "ref_no": "QC-...", "status": "PAID" }
+      }
+    ],
+    "total": 1, "page": 1, "limit": 20
+  }
+}</pre></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- Admin Audit -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="audit">
+    <div class="section-head">
+      <div class="section-icon">📊</div>
+      <div class="section-title-wrap">
+        <div class="section-title">Admin — Audit Logs & Monitoring</div>
+        <div class="section-sub">Append-Only Audit · Admin Dashboard</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 5</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <ul class="feature-list">
+        <li>Audit log append-only ใน <code>admin_audit_logs</code> table</li>
+        <li>Filter ตาม actor, entity, action, date range</li>
+        <li>Log file: NDJSON format ใน <code>logs/YYYY-MM-DD/</code></li>
+      </ul>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/audit-logs</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List audit logs + filter + pagination</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/audit-logs</code><span class="ep-card-desc">List audit logs พร้อม filter (Admin only)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Query Params (ทุก field optional)</div><pre class="ep-pre">?page=1&limit=20
+&actor_id=1          // Admin/Support ที่ทำ action
+&target_user_id=5    // user ที่ถูกกระทำ
+&entity=USER         // USER|VPS|ORDER|TRANSACTION|...
+&action=DISABLE      // DISABLE|ENABLE|CREATE|UPDATE|...
+&from=2026-05-01     // YYYY-MM-DD
+&to=2026-05-31       // YYYY-MM-DD</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "logs": [
+      {
+        "id": 1,
+        "actor_id": 1, "actor_role": "admin",
+        "action": "DISABLE", "entity": "USER", "entity_id": 5,
+        "target_user_id": 5,
+        "metadata": null,
+        "ip_address": "127.0.0.1",
+        "created_at": "2026-05-10T10:00:00Z",
+        "actor": { "id": 1, "email": "admin@cloudvps.com" },
+        "target_user": { "id": 5, "email": "user@test.com" }
+      }
+    ],
+    "total": 42, "page": 1, "limit": 20
+  }
+}</pre><div class="ep-errors"><span>400</span> from/to format ผิด (ต้อง YYYY-MM-DD)</div></div>
+          </div>
+          <div class="ep-note">💡 Action values: DISABLE, ENABLE, ROLE_CHANGE, CREATE, UPDATE, APPROVE, REJECT, CANCEL, START, STOP, REBOOT, EXPIRE, BROADCAST, UPLOAD</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- F13 Package Categories -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <div class="section" id="f13">
+    <div class="section-head">
+      <div class="section-icon">🏷️</div>
+      <div class="section-title-wrap">
+        <div class="section-title">F13 — Package Categories</div>
+        <div class="section-sub">Admin-managed grouping · Public filter</div>
+        <div class="badges">
+          <span class="badge badge-done">✅ Complete</span>
+          <span class="badge badge-blue">Phase 10</span>
+        </div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="two-col">
+        <div>
+          <ul class="feature-list">
+            <li>Admin สร้าง/แก้/toggle status หมวดหมู่</li>
+            <li>ชื่อ category ต้อง unique</li>
+            <li>Package มี <code>category_id</code> optional (nullable)</li>
+            <li>Package เดิมที่ไม่มี category ไม่กระทบ</li>
+            <li>Public filter: <code>GET /api/packages?category_id=N</code></li>
+          </ul>
+        </div>
+        <div>
+          <div class="info-box">
+            <strong>Audit Entity:</strong> <code>PACKAGE_CATEGORY</code><br>
+            ทุก CREATE / UPDATE / ENABLE / DISABLE บันทึกใน audit log<br><br>
+            <strong>Schema:</strong><br>
+            <code>package_categories</code> (id, name unique, description?, status)<br>
+            <code>packages.category_id Int?</code> FK → package_categories
+          </div>
+        </div>
+      </div>
+
+      <div class="api-title">API Endpoints</div>
+      <table class="api-table">
+        <tr><th>Method</th><th>Path</th><th>Access</th><th>คำอธิบาย</th></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/categories</td><td><div class="roles"><span class="role r-public">Public</span></div></td><td>List active categories</td></tr>
+        <tr><td><span class="method m-get">GET</span></td><td class="path">/api/packages/categories/all</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>List ทุก category (รวม inactive)</td></tr>
+        <tr><td><span class="method m-post">POST</span></td><td class="path">/api/packages/categories</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>สร้าง category</td></tr>
+        <tr><td><span class="method m-put">PUT</span></td><td class="path">/api/packages/categories/:id</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>แก้ category</td></tr>
+        <tr><td><span class="method m-patch">PATCH</span></td><td class="path">/api/packages/categories/:id/status</td><td><div class="roles"><span class="role r-admin">Admin</span></div></td><td>Toggle status</td></tr>
+      </table>
+
+      <div class="api-title" style="margin-top:20px">Endpoint Details</div>
+      <div class="ep-cards">
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-post">POST</span><code class="path">/api/packages/categories</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">สร้าง category (Admin)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body</div><pre class="ep-pre">{
+  "name": "Gaming",           // required, unique
+  "description": "..."        // optional
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 201</div><pre class="ep-pre">{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Gaming",
+    "description": "...",
+    "status": true,
+    "created_at": "2026-06-21T..."
+  }
+}</pre><div class="ep-errors"><span>400</span> name ซ้ำ / ขาด name<span>401</span> ไม่ได้ login<span>403</span> ไม่ใช่ Admin</div></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-get">GET</span><code class="path">/api/packages?category_id=N</code><span class="ep-card-desc">Filter packages ตาม category (Public)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Query Param</div><pre class="ep-pre">?category_id=1   // optional
+                 // ถ้าไม่ระบุ = ดูทั้งหมด</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Gaming VPS S",
+      "price": 299,
+      "period": 30,
+      "category": { "id": 1, "name": "Gaming" },
+      "os": { "os_name": "Ubuntu", "os_version": "22.04" },
+      "vm": { "core": 2, "memory": "4GiB", "size": "40GB" }
+    }
+  ]
+}</pre></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-put">PUT</span><code class="path">/api/packages/categories/:id</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">แก้ category (Admin)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">Request Body (ทุก field optional)</div><pre class="ep-pre">{
+  "name": "Dev Tools",    // ถ้าเปลี่ยน ต้องไม่ซ้ำ
+  "description": "..."
+}</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "id": 1, "name": "Dev Tools", ... }
+}</pre><div class="ep-errors"><span>400</span> name ซ้ำ<span>404</span> ไม่พบ category</div></div>
+          </div>
+        </div>
+
+        <div class="ep-card">
+          <div class="ep-card-head"><span class="method m-patch">PATCH</span><code class="path">/api/packages/categories/:id/status</code><span class="ep-tag audit">Audit</span><span class="ep-card-desc">Toggle status (Admin)</span></div>
+          <div class="ep-card-body">
+            <div class="ep-pane"><div class="ep-pane-title">ไม่มี body</div><pre class="ep-pre">ไม่ต้องส่ง body</pre></div>
+            <div class="ep-pane"><div class="ep-pane-title">Response 200</div><pre class="ep-pre">{
+  "success": true,
+  "data": { "id": 1, "name": "Gaming", "status": false }
+}</pre><div class="ep-errors"><span>404</span> ไม่พบ category</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    CloudVPS Backend · docs/Features_Overview.html · Updated 2026-06-21
+  </div>
+</div>
+</body>
+</html>

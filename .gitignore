@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.next/
+dist/
+logs/
+*.log
+.claude/
+*.tsbuildinfo
+.DS_Store

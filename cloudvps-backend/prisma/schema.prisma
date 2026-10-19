@@ -1,0 +1,606 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model roles {
+  id         Int       @id @default(autoincrement())
+  role_name  String    @db.VarChar(50)
+  status     Boolean   @default(true)
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+  users      users[]
+}
+
+model users {
+  id                      Int                    @id @default(autoincrement())
+  email                   String                 @unique @db.VarChar(100)
+  password                String?                @db.VarChar(60)
+  role_id                 Int
+  status                  Boolean                @default(true)
+  is_verify               Boolean                @default(false)
+  created_at              DateTime               @default(now())
+  updated_at              DateTime?              @updatedAt
+  consents                consents[]
+  orders                  orders[]
+  user_oauth_providers    user_oauth_providers[]
+  role                    roles                  @relation(fields: [role_id], references: [id])
+  users_info              users_info?
+  audit_actions_as_actor  admin_audit_logs[]     @relation("AuditActor")
+  audit_actions_as_target admin_audit_logs[]     @relation("AuditTarget")
+  system_configs_updated  system_configs[]
+  email_broadcasts        email_broadcasts[]
+  promo_usages            promo_usages[]
+  email_templates_updated email_templates[]
+  tickets_owned           tickets[]         @relation("TicketOwner")
+  tickets_assigned        tickets[]         @relation("TicketAssignee")
+  ticket_messages         ticket_messages[] @relation("MessageSender")
+
+  @@index([role_id])
+}
+
+model users_info {
+  user_id    Int       @id
+  first_name String    @db.VarChar(150)
+  last_name  String    @db.VarChar(150)
+  phone      String    @db.VarChar(10)
+  address1   String
+  address2   String?
+  address3   String    @db.VarChar(100)
+  address4   String    @db.VarChar(100)
+  address5   String    @db.VarChar(10)
+  address6   String    @db.VarChar(50)
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+  user       users     @relation(fields: [user_id], references: [id])
+}
+
+model policies {
+  id              Int          @id @default(autoincrement())
+  policie_title   String       @db.VarChar(150)
+  policies_detail String
+  policies_type   PoliciesType
+  version         String       @db.VarChar(10)
+  status          Boolean
+  created_at      DateTime     @default(now())
+  updated_at      DateTime?    @updatedAt
+  consents        consents[]
+}
+
+model consents {
+  id          Int      @id @default(autoincrement())
+  users_id    Int
+  policies_id Int
+  accepted_at DateTime @default(now())
+  policy      policies @relation(fields: [policies_id], references: [id])
+  user        users    @relation(fields: [users_id], references: [id])
+
+  @@index([users_id])
+  @@index([policies_id])
+}
+
+model package_categories {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique @db.VarChar(100)
+  description String?
+  status      Boolean    @default(true)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime?  @updatedAt
+  packages    packages[]
+}
+
+model os {
+  id         Int        @id @default(autoincrement())
+  os_name    String     @db.VarChar(50)
+  os_version String     @db.VarChar(50)
+  vmid       Int
+  status     Boolean
+  created_at DateTime   @default(now())
+  updated_at DateTime?  @updatedAt
+  packages   packages[]
+}
+
+model vm {
+  id         Int        @id @default(autoincrement())
+  core       Int
+  memory     String     @db.VarChar(10)
+  size       String     @db.VarChar(10)
+  status     Boolean
+  created_at DateTime   @default(now())
+  updated_at DateTime?  @updatedAt
+  packages   packages[]
+}
+
+model packages {
+  id          Int                  @id @default(autoincrement())
+  name        String               @db.VarChar(100)
+  description String
+  price       Float
+  period      Int
+  os_id       Int
+  vm_id       Int
+  port_count  Int?
+  category_id Int?
+  status      Boolean
+  created_at  DateTime             @default(now())
+  updated_at  DateTime?            @updatedAt
+  orders      orders[]
+  os          os                   @relation(fields: [os_id], references: [id])
+  vm          vm                   @relation(fields: [vm_id], references: [id])
+  category    package_categories?  @relation(fields: [category_id], references: [id])
+
+  @@index([os_id])
+  @@index([vm_id])
+  @@index([category_id])
+}
+
+model promotions {
+  id                  Int            @id @default(autoincrement())
+  code_name           String         @unique @db.VarChar(150)
+  description         String
+  type                PromotionType
+  discount            Float
+  status              Boolean
+  max_uses            Int?
+  max_uses_per_user   Int?
+  used_count          Int            @default(0)
+  created_at          DateTime       @default(now())
+  updated_at          DateTime?      @updatedAt
+  expired_at          DateTime?
+  orders              orders[]
+  promo_usages        promo_usages[]
+  locked_vps          vps[]
+}
+
+model orders {
+  id              Int            @id @default(autoincrement())
+  ref_no          String         @unique @db.VarChar(100)
+  amount          Int
+  users_id        Int
+  promotions_id   Int?
+  packages_id     Int
+  renewal_vps_id  Int?
+  upgrade_vps_id  Int?
+  status          OrderStatus    @default(PENDING)
+  created_at      DateTime       @default(now())
+  expired_at      DateTime?
+  package         packages       @relation(fields: [packages_id], references: [id])
+  promotion       promotions?    @relation(fields: [promotions_id], references: [id])
+  user            users          @relation(fields: [users_id], references: [id])
+  temp_vps        temp_vps?
+  transactions    transactions[]
+  vps             vps?           @relation("vps_provision")
+  renewal_vps     vps?           @relation("vps_renewals", fields: [renewal_vps_id], references: [id])
+  upgrade_vps     vps?           @relation("vps_upgrades", fields: [upgrade_vps_id], references: [id])
+  promo_usage     promo_usages?
+  upgrade_log     vps_upgrade_logs?
+
+  @@index([users_id])
+  @@index([packages_id])
+  @@index([promotions_id])
+  @@index([renewal_vps_id])
+  @@index([upgrade_vps_id])
+}
+
+model transactions {
+  id              Int           @id @default(autoincrement())
+  provider_ref_id String        @db.VarChar(100)
+  amount          Int
+  payment_method  PaymentMethod
+  slip_url        String?
+  order_id        Int
+  status          TxStatus
+  created_at      DateTime      @default(now())
+  updated_at      DateTime?     @updatedAt
+  order           orders        @relation(fields: [order_id], references: [id])
+
+  @@index([order_id])
+}
+
+model temp_vps {
+  id         Int      @id @default(autoincrement())
+  name       String?  @db.VarChar(150)
+  order_id   Int      @unique
+  created_at DateTime @default(now())
+  order      orders   @relation(fields: [order_id], references: [id])
+}
+
+model promo_usages {
+  id           Int        @id @default(autoincrement())
+  promotion_id Int
+  user_id      Int
+  order_id     Int        @unique
+  created_at   DateTime   @default(now())
+  promotion    promotions @relation(fields: [promotion_id], references: [id])
+  user         users      @relation(fields: [user_id], references: [id])
+  order        orders     @relation(fields: [order_id], references: [id])
+
+  @@index([promotion_id, user_id])
+  @@index([user_id])
+}
+
+model vps {
+  id                  Int                @id @default(autoincrement())
+  name                String             @db.VarChar(150)
+  vmid                Int
+  ip_assignments_id   Int                @unique
+  orders_id           Int                @unique
+  status              Boolean
+  auto_renew          Boolean            @default(false)
+  locked_promo_id     Int?
+  current_cores       Int?
+  current_memory_gib  Int?
+  current_disk_gb     Int?
+  monthly_price       Float?
+  created_at          DateTime           @default(now())
+  expired_at          DateTime
+  deleted_at          DateTime?
+  ip_assignment       ip_assignments     @relation(fields: [ip_assignments_id], references: [id])
+  order               orders             @relation("vps_provision", fields: [orders_id], references: [id])
+  renewal_orders      orders[]           @relation("vps_renewals")
+  upgrade_orders      orders[]           @relation("vps_upgrades")
+  locked_promo        promotions?        @relation(fields: [locked_promo_id], references: [id])
+  upgrade_logs        vps_upgrade_logs[]
+  nat_allocation      nat_allocations?
+
+  @@index([expired_at])
+  @@index([status])
+  @@index([deleted_at])
+  @@index([expired_at, status, deleted_at])
+  @@index([locked_promo_id])
+  @@index([auto_renew, expired_at, deleted_at])
+}
+
+model ip_assignments {
+  id         Int       @id @default(autoincrement())
+  ip_id      Int
+  status     Boolean
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
+  ip_pool    ip_pools  @relation(fields: [ip_id], references: [id])
+  vps        vps?
+
+  @@index([ip_id])
+}
+
+model user_oauth_providers {
+  id               Int           @id @default(autoincrement())
+  user_id          Int
+  provider         OAuthProvider
+  provider_uid     String        @db.VarChar(200)
+  access_token     String?
+  refresh_token    String?
+  token_expires_at DateTime?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime?     @updatedAt
+  user             users         @relation(fields: [user_id], references: [id])
+
+  @@unique([provider, provider_uid])
+}
+
+model ip_pools {
+  id             Int              @id @default(autoincrement())
+  ip             String           @db.Inet
+  type           IpType
+  status         Boolean
+  created_at     DateTime         @default(now())
+  updated_at     DateTime?        @updatedAt
+  ip_assignments ip_assignments[]
+}
+
+enum NatProtocol {
+  TCP
+  UDP
+  BOTH
+}
+
+model nat_allocations {
+  id          Int              @id @default(autoincrement())
+  vps_id      Int              @unique
+  public_ip   String           @db.VarChar(45)
+  port_start  Int
+  port_end    Int
+  is_active   Boolean          @default(true)
+  created_at  DateTime         @default(now())
+  vps         vps              @relation(fields: [vps_id], references: [id])
+  port_rules  nat_port_rules[]
+
+  @@index([public_ip, is_active])
+}
+
+model nat_port_rules {
+  id            Int             @id @default(autoincrement())
+  allocation_id Int
+  public_port   Int
+  private_port  Int
+  protocol      NatProtocol
+  is_system     Boolean         @default(false)
+  mikrotik_ids  Json?
+  is_active     Boolean         @default(true)
+  created_at    DateTime        @default(now())
+  allocation    nat_allocations @relation(fields: [allocation_id], references: [id])
+
+  @@index([allocation_id, is_active])
+  @@index([allocation_id, public_port])
+}
+
+enum PoliciesType {
+  PDPA
+  TERMSERVICE
+}
+
+enum PromotionType {
+  DISCOUNT
+  PERCENT
+}
+
+enum OrderStatus {
+  PAID
+  PENDING
+  CANCEL
+  EXPIRE
+}
+
+enum PaymentMethod {
+  SLIP
+  PROMPTPAY
+  TRUEMONEY
+}
+
+enum TxStatus {
+  SUCCESSFUL
+  PENDING
+  REJECT
+}
+
+enum IpType {
+  PUBLIC
+  PRIVATE
+}
+
+enum OAuthProvider {
+  GOOGLE
+  DISCORD
+  FACEBOOK
+}
+
+model admin_audit_logs {
+  id             Int         @id @default(autoincrement())
+  actor_id       Int
+  actor_role     String      @db.VarChar(20)
+  action         AuditAction
+  entity         AuditEntity
+  entity_id      Int
+  target_user_id Int?
+  metadata       Json?
+  ip_address     String?     @db.VarChar(45)
+  created_at     DateTime    @default(now())
+
+  actor       users  @relation("AuditActor", fields: [actor_id], references: [id])
+  target_user users? @relation("AuditTarget", fields: [target_user_id], references: [id])
+
+  @@index([actor_id])
+  @@index([entity, entity_id])
+  @@index([target_user_id])
+  @@index([created_at])
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  ENABLE
+  DISABLE
+  APPROVE
+  REJECT
+  CANCEL
+  START
+  STOP
+  REBOOT
+  RESET
+  VIEW
+  EXPIRE
+  ROLE_CHANGE
+  BROADCAST
+  UPGRADE
+  ASSIGN
+  REPLY
+  BYPASS
+}
+
+enum AuditEntity {
+  USER
+  VPS
+  ORDER
+  TRANSACTION
+  PACKAGE
+  OS_TEMPLATE
+  VM_SPEC
+  PROMOTION
+  POLICY
+  IP_POOL
+  SYSTEM_CONFIG
+  EMAIL_BROADCAST
+  VPS_UPGRADE
+  PACKAGE_CATEGORY
+  EMAIL_TEMPLATE
+  TICKET
+  TICKET_CATEGORY
+  CAPACITY_CHECK
+  VPS_TERMINAL
+}
+
+enum BroadcastType {
+  MAINTENANCE
+  EMERGENCY
+  ANNOUNCEMENT
+}
+
+enum BroadcastTarget {
+  ALL
+  ACTIVE_VPS
+  EXPIRING_SOON
+}
+
+model email_broadcasts {
+  id           Int             @id @default(autoincrement())
+  subject      String          @db.VarChar(200)
+  body         String
+  type         BroadcastType
+  target       BroadcastTarget
+  sent_by      Int
+  sent_count   Int             @default(0)
+  failed_count Int             @default(0)
+  created_at   DateTime        @default(now())
+  sender       users           @relation(fields: [sent_by], references: [id])
+
+  @@index([sent_by])
+  @@index([created_at])
+}
+
+model system_configs {
+  id          Int       @id @default(autoincrement())
+  key         String    @unique @db.VarChar(100)
+  value       String?
+  description String?   @db.VarChar(500)
+  is_secret   Boolean   @default(false)
+  category    String    @db.VarChar(50)
+  updated_by  Int?
+  updated_at  DateTime  @updatedAt
+  updater     users?    @relation(fields: [updated_by], references: [id])
+
+  @@index([category])
+  @@index([updated_by])
+}
+
+model vps_upgrade_logs {
+  id                   Int         @id @default(autoincrement())
+  vps_id               Int
+  order_id             Int         @unique
+  upgrade_type         UpgradeType
+  before_cores         Int
+  before_memory_gib    Int
+  before_disk_gb       Int
+  before_monthly_price Float
+  after_cores          Int
+  after_memory_gib     Int
+  after_disk_gb        Int
+  after_monthly_price  Float
+  amount_charged       Int
+  days_remaining       Int?
+  period_days          Int?
+  new_subtotal         Float?
+  old_credit           Float?
+  applied_at           DateTime?
+  failed_at            DateTime?
+  fail_reason          String?
+  created_at           DateTime    @default(now())
+  vps                  vps         @relation(fields: [vps_id], references: [id])
+  order                orders      @relation(fields: [order_id], references: [id])
+
+  @@index([vps_id])
+  @@index([created_at])
+}
+
+enum UpgradeType {
+  PACKAGE
+  CUSTOM
+}
+
+enum EmailTemplateType {
+  VERIFICATION
+  EXPIRY_WARNING
+  EXPIRED
+  FORCE_DELETED
+  AUTO_RENEWAL_REMINDER
+  BROADCAST_MAINTENANCE
+  BROADCAST_EMERGENCY
+  BROADCAST_ANNOUNCEMENT
+  WELCOME
+  TICKET_REPLY
+  TICKET_CLOSED
+  VPS_PROVISIONED
+  VPS_PASSWORD_OTP
+  VPS_PASSWORD_CHANGED
+}
+
+model email_templates {
+  id         Int               @id @default(autoincrement())
+  type       EmailTemplateType @unique
+  subject    String            @db.VarChar(255)
+  body_html  String            @db.Text
+  variables  Json?
+  is_active  Boolean           @default(true)
+  updated_by Int?
+  created_at DateTime          @default(now())
+  updated_at DateTime?         @updatedAt
+  updater    users?            @relation(fields: [updated_by], references: [id])
+
+  @@index([updated_by])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model ticket_categories {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(100)
+  description String?
+  status      Boolean   @default(true)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime? @updatedAt
+  tickets     tickets[]
+}
+
+model tickets {
+  id          Int               @id @default(autoincrement())
+  ref_no      String            @unique @db.VarChar(30)
+  title       String            @db.VarChar(255)
+  category_id Int
+  priority    TicketPriority    @default(MEDIUM)
+  status      TicketStatus      @default(OPEN)
+  user_id     Int
+  assigned_to Int?
+  closed_at   DateTime?
+  created_at  DateTime          @default(now())
+  updated_at  DateTime?         @updatedAt
+  category    ticket_categories @relation(fields: [category_id], references: [id])
+  user        users             @relation("TicketOwner", fields: [user_id], references: [id])
+  assignee    users?            @relation("TicketAssignee", fields: [assigned_to], references: [id])
+  messages    ticket_messages[]
+
+  @@index([user_id])
+  @@index([status])
+  @@index([assigned_to])
+  @@index([category_id])
+}
+
+model ticket_messages {
+  id          Int      @id @default(autoincrement())
+  ticket_id   Int
+  sender_id   Int
+  message     String
+  attachments Json?
+  is_internal Boolean  @default(false)
+  created_at  DateTime @default(now())
+  ticket      tickets  @relation(fields: [ticket_id], references: [id])
+  sender      users    @relation("MessageSender", fields: [sender_id], references: [id])
+
+  @@index([ticket_id])
+  @@index([sender_id])
+}

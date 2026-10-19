@@ -1,0 +1,14 @@
+node_modules/
+.env
+dist/
+.prisma/
+*.log
+logs/
+.DS_Store
+bun.lockb
+.claude/
+
+uploads/**
+!uploads/.gitkeep
+!uploads/slips/
+!uploads/slips/.gitkeep

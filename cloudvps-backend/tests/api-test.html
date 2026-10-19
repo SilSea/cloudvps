@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudVPS API Tester</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+  /* Header */
+  .header { background: #1a1a2e; color: #fff; padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .header h1 { font-size: 18px; font-weight: 700; color: #4fc3f7; white-space: nowrap; }
+  .base-url-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 280px; }
+  .base-url-wrap label { font-size: 12px; color: #90caf9; white-space: nowrap; }
+  .base-url-wrap input { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid #444; background: #2d2d44; color: #fff; font-size: 13px; }
+  .token-status { font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: 600; white-space: nowrap; }
+  .token-status.ok  { background: #1b5e20; color: #a5d6a7; }
+  .token-status.no  { background: #4a1111; color: #ef9a9a; }
+
+  /* Layout */
+  .main { display: flex; height: calc(100vh - 54px); overflow: hidden; }
+
+  /* Sidebar tabs */
+  .sidebar { width: 160px; background: #1e2a3a; flex-shrink: 0; overflow-y: auto; padding: 8px 0; }
+  .tab-btn { display: block; width: 100%; padding: 11px 16px; background: none; border: none; color: #90caf9; font-size: 13px; text-align: left; cursor: pointer; border-left: 3px solid transparent; transition: all .15s; }
+  .tab-btn:hover { background: #253347; color: #fff; }
+  .tab-btn.active { background: #253347; color: #4fc3f7; border-left-color: #4fc3f7; font-weight: 600; }
+  .tab-sep { height: 1px; background: #2d3e50; margin: 6px 10px; }
+
+  /* Content */
+  .content { flex: 1; display: flex; overflow: hidden; }
+
+  /* Action panel */
+  .actions { width: 360px; flex-shrink: 0; overflow-y: auto; padding: 16px; background: #fff; border-right: 1px solid #e0e0e0; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .section { margin-bottom: 20px; background: #f8f9fb; border: 1px solid #e4e6ea; border-radius: 8px; overflow: hidden; }
+  .section-title { background: #eef0f5; padding: 9px 14px; font-size: 12px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid #e4e6ea; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .section-title .method { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .method-get  { background: #e3f2fd; color: #1565c0; }
+  .method-post { background: #e8f5e9; color: #2e7d32; }
+  .method-patch{ background: #fff3e0; color: #e65100; }
+  .method-put  { background: #f3e5f5; color: #6a1b9a; }
+  .method-del  { background: #fce4ec; color: #c62828; }
+  .section-body { padding: 12px 14px; }
+  .form-row { margin-bottom: 8px; }
+  .form-row label { display: block; font-size: 11px; color: #666; margin-bottom: 3px; font-weight: 600; }
+  .form-row input, .form-row select, .form-row textarea { width: 100%; padding: 7px 10px; border: 1px solid #d0d4db; border-radius: 5px; font-size: 13px; background: #fff; font-family: inherit; }
+  .form-row textarea { height: 70px; resize: vertical; font-family: monospace; font-size: 11px; }
+  .btn { display: inline-block; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: opacity .15s; }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: #1565c0; color: #fff; width: 100%; margin-top: 4px; }
+  .btn-danger  { background: #c62828; color: #fff; width: 100%; margin-top: 4px; }
+  .btn-warn    { background: #e65100; color: #fff; width: 100%; margin-top: 4px; }
+  .btn-success { background: #2e7d32; color: #fff; width: 100%; margin-top: 4px; }
+  .btn-purple  { background: #6a1b9a; color: #fff; width: 100%; margin-top: 4px; }
+
+  /* Response panel */
+  .response-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #1e1e2e; }
+  .response-header { padding: 10px 16px; background: #16162a; border-bottom: 1px solid #2d2d44; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .response-header span { font-size: 12px; color: #90caf9; }
+  .status-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 10px; }
+  .status-2xx { background: #1b5e20; color: #a5d6a7; }
+  .status-4xx { background: #4a2900; color: #ffcc80; }
+  .status-5xx { background: #4a1111; color: #ef9a9a; }
+  .status-xxx { background: #333; color: #aaa; }
+  .response-body { flex: 1; overflow: auto; padding: 16px; }
+  pre#response-pre { font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; color: #e0e0e0; white-space: pre-wrap; word-break: break-word; }
+  .json-key    { color: #82aaff; }
+  .json-str    { color: #c3e88d; }
+  .json-num    { color: #f78c6c; }
+  .json-bool   { color: #ff9cac; }
+  .json-null   { color: #888; }
+  .clear-btn { margin-left: auto; padding: 4px 12px; border-radius: 5px; border: 1px solid #444; background: none; color: #90caf9; font-size: 12px; cursor: pointer; }
+  .clear-btn:hover { background: #2d2d44; }
+
+  .endpoint-tag { font-size: 11px; color: #4fc3f7; background: #1e2a3a; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+
+  /* VPS table view */
+  .vps-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .vps-table th { background: #1e2a3a; color: #90caf9; padding: 9px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; position: sticky; top: 0; }
+  .vps-table td { padding: 9px 12px; border-bottom: 1px solid #eef0f5; vertical-align: middle; }
+  .vps-table tr:hover td { background: #f8f9fb; }
+  .vps-table tr.row-running td { border-left: 3px solid #43a047; }
+  .vps-table tr.row-stopped td { border-left: 3px solid #e53935; }
+  .vps-table tr.row-loading td { border-left: 3px solid #90caf9; }
+  .tbl-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .tbl-actions { display: flex; gap: 4px; }
+  .tbl-btn { padding: 3px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 11px; font-weight: 700; }
+  .tbl-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .tbl-btn-start  { background: #e8f5e9; color: #2e7d32; }
+  .tbl-btn-stop   { background: #fce4ec; color: #c62828; }
+  .tbl-btn-reboot { background: #fff3e0; color: #e65100; }
+  .view-toggle { display: flex; border: 1px solid #d0d4db; border-radius: 5px; overflow: hidden; }
+  .view-btn { padding: 4px 10px; border: none; background: #fff; color: #555; font-size: 12px; cursor: pointer; }
+  .view-btn.active { background: #1565c0; color: #fff; }
+
+  /* Monitor mode — actions panel expands full width */
+  .main.monitor-mode .actions { width: 100%; border-right: none; }
+  .main.monitor-mode .response-panel { display: none; }
+
+  /* Monitor panel */
+  .monitor-toolbar { display: flex; align-items: center; gap: 10px; padding: 4px 0 14px; flex-wrap: wrap; border-bottom: 1px solid #e4e6ea; margin-bottom: 14px; }
+  .mon-select { padding: 5px 8px; border-radius: 5px; border: 1px solid #d0d4db; font-size: 12px; background: #fff; }
+  .mon-last { font-size: 11px; color: #999; margin-left: auto; }
+  .mon-count { font-size: 12px; color: #555; background: #eef0f5; padding: 3px 10px; border-radius: 10px; }
+
+  /* VPS cards grid */
+  .vps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .vps-card { background: #fff; border: 2px solid #e4e6ea; border-radius: 10px; overflow: hidden; transition: border-color .3s; }
+  .vps-card.live-running { border-color: #43a047; }
+  .vps-card.live-stopped { border-color: #e53935; }
+  .vps-card.live-loading { border-color: #90caf9; }
+  .vps-card-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; background: #f8f9fb; border-bottom: 1px solid #eee; }
+  .vps-card-head strong { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .live-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #43a047; box-shadow: 0 0 6px #66bb6a; }
+  .dot-red   { background: #e53935; }
+  .dot-blue  { background: #90caf9; animation: blink 1s infinite; }
+  .dot-gray  { background: #bbb; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .live-label { font-size: 11px; font-weight: 600; }
+  .label-running { color: #2e7d32; }
+  .label-stopped { color: #c62828; }
+  .label-loading { color: #1565c0; }
+  .label-unknown { color: #888; }
+  .vps-card-body { padding: 10px 14px; font-size: 12px; color: #555; line-height: 1.8; }
+  .vps-card-body span { color: #1a1a2e; font-weight: 600; }
+  .vps-card-actions { padding: 8px 14px; display: flex; gap: 6px; border-top: 1px solid #f0f0f0; }
+  .cbtn { flex: 1; padding: 6px 4px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; font-weight: 700; transition: opacity .15s; }
+  .cbtn:hover { opacity: .75; }
+  .cbtn-start  { background: #e8f5e9; color: #2e7d32; }
+  .cbtn-stop   { background: #fce4ec; color: #c62828; }
+  .cbtn-reboot { background: #fff3e0; color: #e65100; }
+  .cbtn-renew  { background: #e3f2fd; color: #1565c0; }
+  .cbtn-fdel   { background: #ffebee; color: #b71c1c; }
+  .monitor-empty { text-align: center; color: #aaa; padding: 60px 20px; font-size: 14px; grid-column: 1/-1; }
+  .danger-box { background: #fff5f5; border: 1px solid #ffcdd2; border-radius: 8px; padding: 14px 16px; margin-top: 20px; grid-column: 1/-1; }
+  .danger-box h4 { color: #c62828; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+  .danger-box p { font-size: 12px; color: #666; line-height: 1.6; }
+  .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 999; }
+  .confirm-box { background: #fff; border-radius: 12px; padding: 24px; width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+  .confirm-box h3 { color: #c62828; margin-bottom: 8px; font-size: 16px; }
+  .confirm-box p { font-size: 13px; color: #555; margin-bottom: 16px; }
+  .confirm-btns { display: flex; gap: 8px; }
+  .confirm-btns button { flex: 1; padding: 9px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 700; }
+  .btn-confirm-yes { background: #c62828; color: #fff; }
+  .btn-confirm-no  { background: #eee; color: #333; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ CloudVPS API</h1>
+  <div class="base-url-wrap">
+    <label>Base URL</label>
+    <input type="text" id="baseUrl" value="http://localhost:8080" />
+  </div>
+  <div id="tokenStatus" class="token-status no">ไม่มี Token</div>
+</div>
+
+<div class="main">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <button class="tab-btn active" onclick="showTab('auth',this)">🔑 Auth</button>
+    <button class="tab-btn" onclick="showTab('profile',this)">👤 Profile</button>
+    <button class="tab-btn" onclick="showTab('packages',this)">📦 Packages</button>
+    <button class="tab-btn" onclick="showTab('policies',this)">📋 Policies</button>
+    <button class="tab-btn" onclick="showTab('promotions',this)">🎁 Promotions</button>
+    <button class="tab-btn" onclick="showTab('orders',this)">🛒 Orders</button>
+    <button class="tab-btn" onclick="showTab('transactions',this)">💳 Transactions</button>
+    <button class="tab-btn" onclick="showTab('vps',this)">🖥️ VPS</button>
+    <button class="tab-btn" onclick="showTab('nat',this)">🔀 Port Rules</button>
+    <button class="tab-btn" onclick="showTab('upgrade',this)">⬆️ Upgrade</button>
+    <div class="tab-sep"></div>
+    <button class="tab-btn" onclick="showTab('users',this)">🛡️ Users (Admin)</button>
+    <button class="tab-btn" onclick="showTab('admin',this)">📊 Admin</button>
+    <button class="tab-btn" onclick="showTab('system',this)">⚙️ System</button>
+    <div class="tab-sep"></div>
+    <button class="tab-btn" onclick="showTab('monitor',this)">📡 Monitor</button>
+  </nav>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Actions -->
+    <div class="actions">
+
+      <!-- AUTH PANEL -->
+      <div id="panel-auth" class="panel active">
+
+        <div class="section">
+          <div class="section-title">Login <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Email</label><input type="email" id="login-email" value="admin@cloudvps.com" /></div>
+            <div class="form-row"><label>Password</label><input type="password" id="login-pass" value="Password1234!" /></div>
+            <button class="btn btn-primary" onclick="login()">Login & Save Token</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Register <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Email</label><input type="email" id="reg-email" value="user@test.com" /></div>
+            <div class="form-row"><label>Password</label><input type="password" id="reg-pass" value="Password123!" /></div>
+            <div class="form-row"><label>First Name</label><input id="reg-fname" value="Test" /></div>
+            <div class="form-row"><label>Last Name</label><input id="reg-lname" value="User" /></div>
+            <div class="form-row"><label>Phone (10 digits)</label><input id="reg-phone" value="0812345678" /></div>
+            <div class="form-row"><label>Address (บ้านเลขที่/ถนน)</label><input id="reg-addr1" value="123 ถนนทดสอบ" /></div>
+            <div class="form-row"><label>แขวง/ตำบล</label><input id="reg-addr3" value="แขวงลาดยาว" /></div>
+            <div class="form-row"><label>เขต/อำเภอ</label><input id="reg-addr4" value="เขตจตุจักร" /></div>
+            <div class="form-row"><label>รหัสไปรษณีย์</label><input id="reg-addr5" value="10900" /></div>
+            <div class="form-row"><label>จังหวัด</label><input id="reg-addr6" value="กรุงเทพมหานคร" /></div>
+            <div class="form-row"><label>Policy IDs (comma-separated)</label><input id="reg-policies" value="1,2" /></div>
+            <button class="btn btn-primary" onclick="register()">Register</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Refresh Token <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Refresh Token</label><input id="rf-token" placeholder="ใช้จาก login response" /></div>
+            <button class="btn btn-primary" onclick="refreshToken()">Refresh Access Token</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Verify Email <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Token (จาก email link)</label><input id="verify-token" placeholder="eyJ..." /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/auth/verify/'+document.getElementById('verify-token').value,null,false)">Verify Email</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Me <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="me()">Get Current User</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Logout <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <button class="btn btn-danger" onclick="logout()">Logout & Clear Token</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Manual Token</div>
+          <div class="section-body">
+            <div class="form-row"><label>Paste Token</label><input id="manual-token" placeholder="eyJ..." /></div>
+            <button class="btn btn-success" onclick="setManualToken()">Set Token</button>
+            <button class="btn btn-danger" onclick="clearToken()">Clear Token</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE PANEL (self-service) -->
+      <div id="panel-profile" class="panel">
+        <div class="section">
+          <div class="section-title">Get My Profile <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/users/me')">Get Profile</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update My Profile <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>First Name</label><input id="upd-fname" placeholder="ชื่อ" /></div>
+            <div class="form-row"><label>Last Name</label><input id="upd-lname" placeholder="นามสกุล" /></div>
+            <div class="form-row"><label>Phone (10 digits)</label><input id="upd-phone" placeholder="0812345678" /></div>
+            <div class="form-row"><label>Address 1</label><input id="upd-addr1" placeholder="บ้านเลขที่/ถนน" /></div>
+            <div class="form-row"><label>แขวง/ตำบล</label><input id="upd-addr3" placeholder="แขวง..." /></div>
+            <div class="form-row"><label>เขต/อำเภอ</label><input id="upd-addr4" placeholder="เขต..." /></div>
+            <div class="form-row"><label>รหัสไปรษณีย์</label><input id="upd-addr5" placeholder="10900" /></div>
+            <div class="form-row"><label>จังหวัด</label><input id="upd-addr6" placeholder="กรุงเทพมหานคร" /></div>
+            <button class="btn btn-purple" onclick="updateMe()">Update Profile</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Change Password <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Current Password</label><input type="password" id="cp-current" /></div>
+            <div class="form-row"><label>New Password</label><input type="password" id="cp-new" /></div>
+            <button class="btn btn-warn" onclick="changePassword()">Change Password</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Change Email <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>New Email</label><input type="email" id="ce-email" /></div>
+            <button class="btn btn-warn" onclick="changeEmail()">Change Email</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PACKAGES PANEL -->
+      <div id="panel-packages" class="panel">
+        <div class="section">
+          <div class="section-title">List Active Categories <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/packages/categories')">List Active Categories</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List All Categories (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/packages/categories/all')">List All Categories</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Create Category (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Name</label><input id="cat-new-name" placeholder="เช่น Gaming, Dev, Web" /></div>
+            <div class="form-row"><label>Description (optional)</label><input id="cat-new-desc" placeholder="คำอธิบายหมวดหมู่" /></div>
+            <button class="btn btn-success" onclick="createCategory()">Create Category</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update Category (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Category ID</label><input id="cat-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Name (optional)</label><input id="cat-upd-name" /></div>
+            <div class="form-row"><label>Description (optional)</label><input id="cat-upd-desc" /></div>
+            <button class="btn btn-purple" onclick="updateCategory()">Update Category</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle Category Status (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Category ID</label><input id="cat-toggle-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/packages/categories/'+document.getElementById('cat-toggle-id').value+'/status')">Toggle Status</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List Packages <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Category ID (optional)</label><input id="pkg-cat-filter" type="number" placeholder="กรองตาม category" /></div>
+            <button class="btn btn-primary" onclick="listPackages()">List Packages</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Get Package By ID <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Package ID</label><input id="pkg-id" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/packages/'+document.getElementById('pkg-id').value)">Get Package</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Create Package (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Name</label><input id="pkg-new-name" value="Basic VPS" /></div>
+            <div class="form-row"><label>Description</label><input id="pkg-new-desc" value="VPS ขนาดเล็ก" /></div>
+            <div class="form-row"><label>Price (THB)</label><input id="pkg-new-price" value="199" type="number" /></div>
+            <div class="form-row"><label>Period (days)</label><input id="pkg-new-period" value="30" type="number" /></div>
+            <div class="form-row"><label>OS ID</label><input id="pkg-new-osid" value="1" type="number" /></div>
+            <div class="form-row"><label>VM Spec ID</label><input id="pkg-new-vmid" value="1" type="number" /></div>
+            <div class="form-row"><label>Category ID (optional)</label><input id="pkg-new-catid" type="number" placeholder="ไม่บังคับ" /></div>
+            <button class="btn btn-success" onclick="createPackage()">Create Package</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update Package (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Package ID</label><input id="pkg-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Name (optional)</label><input id="pkg-upd-name" /></div>
+            <div class="form-row"><label>Price (optional)</label><input id="pkg-upd-price" type="number" /></div>
+            <button class="btn btn-purple" onclick="updatePackage()">Update Package</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle Package Status (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Package ID</label><input id="pkg-toggle-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/packages/'+document.getElementById('pkg-toggle-id').value+'/status')">Toggle Status</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List OS Templates (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/packages/os')">List OS</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Create OS Template (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>OS Name</label><input id="os-name" value="Ubuntu" /></div>
+            <div class="form-row"><label>OS Version</label><input id="os-version" value="22.04" /></div>
+            <div class="form-row"><label>Template VMID</label><input id="os-vmid" value="21024" type="number" /></div>
+            <button class="btn btn-success" onclick="createOs()">Create OS Template</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update OS Template (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>OS ID</label><input id="os-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>OS Name</label><input id="os-upd-name" /></div>
+            <div class="form-row"><label>OS Version</label><input id="os-upd-ver" /></div>
+            <div class="form-row"><label>VMID</label><input id="os-upd-vmid" type="number" /></div>
+            <button class="btn btn-purple" onclick="updateOs()">Update OS Template</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List VM Specs (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/packages/vm')">List VM Specs</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Create VM Spec (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>CPU Cores</label><input id="vm-core" value="2" type="number" /></div>
+            <div class="form-row"><label>Memory (e.g. 2GB)</label><input id="vm-memory" value="2GB" /></div>
+            <div class="form-row"><label>Disk Size (e.g. 20GB)</label><input id="vm-size" value="20GB" /></div>
+            <button class="btn btn-success" onclick="createVm()">Create VM Spec</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update VM Spec (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VM Spec ID</label><input id="vm-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>CPU Cores</label><input id="vm-upd-core" type="number" /></div>
+            <div class="form-row"><label>Memory</label><input id="vm-upd-memory" /></div>
+            <div class="form-row"><label>Disk Size</label><input id="vm-upd-size" /></div>
+            <button class="btn btn-purple" onclick="updateVm()">Update VM Spec</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- POLICIES PANEL -->
+      <div id="panel-policies" class="panel">
+        <div class="section">
+          <div class="section-title">Get Active Policies <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/policies/active',null,false)">Get Active Policies</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List All Policies (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/policies')">List All Policies</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Create Policy (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Title</label><input id="pol-title" value="Privacy Policy" /></div>
+            <div class="form-row"><label>Detail</label><textarea id="pol-detail">นโยบายความเป็นส่วนตัว...</textarea></div>
+            <div class="form-row">
+              <label>Type</label>
+              <select id="pol-type">
+                <option>PDPA</option>
+                <option>TERMSERVICE</option>
+              </select>
+            </div>
+            <div class="form-row"><label>Version</label><input id="pol-version" value="1.0" /></div>
+            <button class="btn btn-success" onclick="createPolicy()">Create Policy</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update Policy (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Policy ID</label><input id="pol-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Title (optional)</label><input id="pol-upd-title" /></div>
+            <div class="form-row"><label>Version (optional)</label><input id="pol-upd-version" /></div>
+            <button class="btn btn-purple" onclick="updatePolicy()">Update Policy</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle Policy Status (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Policy ID</label><input id="pol-toggle-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/policies/'+document.getElementById('pol-toggle-id').value+'/status')">Toggle Status</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Accept Consent <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Policy ID</label><input id="consent-pol-id" value="1" type="number" /></div>
+            <button class="btn btn-success" onclick="call('POST','/api/policies/consents',{policy_id:parseInt(document.getElementById('consent-pol-id').value)})">Accept Consent</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">My Consents <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/policies/consents/me')">Get My Consents</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROMOTIONS PANEL -->
+      <div id="panel-promotions" class="panel">
+        <div class="section">
+          <div class="section-title">List Promotions (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/promotions')">List Promotions</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Create Promotion (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Code Name</label><input id="promo-code" value="SAVE10" /></div>
+            <div class="form-row"><label>Description</label><input id="promo-desc" value="ลด 10 บาท" /></div>
+            <div class="form-row">
+              <label>Type</label>
+              <select id="promo-type">
+                <option value="DISCOUNT">DISCOUNT (fixed)</option>
+                <option value="PERCENT">PERCENT (%)</option>
+              </select>
+            </div>
+            <div class="form-row"><label>Discount Value</label><input id="promo-discount" value="10" type="number" /></div>
+            <div class="form-row"><label>Expired At (optional, YYYY-MM-DD)</label><input id="promo-exp" type="date" /></div>
+            <div class="form-row"><label>Max Uses (optional, global cap)</label><input id="promo-max-uses" type="number" placeholder="ว่าง = ไม่จำกัด" /></div>
+            <div class="form-row"><label>Max Uses Per User (optional)</label><input id="promo-max-per-user" type="number" placeholder="ว่าง = ไม่จำกัด" /></div>
+            <button class="btn btn-success" onclick="createPromotion()">Create Promotion</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update Promotion (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Promotion ID</label><input id="promo-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Code Name (optional)</label><input id="promo-upd-code" /></div>
+            <div class="form-row"><label>Discount (optional)</label><input id="promo-upd-discount" type="number" /></div>
+            <button class="btn btn-purple" onclick="updatePromotion()">Update Promotion</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle Promotion Status (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Promotion ID</label><input id="promo-toggle-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/promotions/'+document.getElementById('promo-toggle-id').value+'/status')">Toggle Status</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Validate Promo Code <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Code</label><input id="promo-val-code" value="SAVE10" /></div>
+            <button class="btn btn-primary" onclick="call('POST','/api/promotions/validate',{code:document.getElementById('promo-val-code').value})">Validate Code</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ORDERS PANEL -->
+      <div id="panel-orders" class="panel">
+        <div class="section">
+          <div class="section-title">Create Order <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Package ID</label><input id="ord-pkg" value="1" type="number" /></div>
+            <div class="form-row"><label>Promo Code (optional)</label><input id="ord-promo" placeholder="SAVE10" /></div>
+            <button class="btn btn-success" onclick="createOrder()">Create Order</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List Orders <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Page</label><input id="ord-page" value="1" type="number" /></div>
+            <div class="form-row"><label>Limit</label><input id="ord-limit" value="10" type="number" /></div>
+            <button class="btn btn-primary" onclick="listOrders()">List Orders</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Get Order By ID <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Order ID</label><input id="ord-id" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/orders/'+document.getElementById('ord-id').value)">Get Order</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Cancel Order <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Order ID</label><input id="ord-cancel-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/orders/'+document.getElementById('ord-cancel-id').value+'/cancel')">Cancel Order</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSACTIONS PANEL -->
+      <div id="panel-transactions" class="panel">
+        <div class="section">
+          <div class="section-title">Submit Payment <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Order ID</label><input id="tx-order" value="1" type="number" /></div>
+            <div class="form-row">
+              <label>Payment Method</label>
+              <select id="tx-method" onchange="togglePaymentFields()">
+                <option value="PROMPTPAY">PROMPTPAY</option>
+                <option value="TRUEMONEY">TRUEMONEY</option>
+                <option value="SLIP">SLIP</option>
+              </select>
+            </div>
+            <div id="tx-voucher-row" class="form-row" style="display:none">
+              <label>Voucher Code (TrueMoney)</label><input id="tx-voucher" />
+            </div>
+            <!-- SLIP: required. PROMPTPAY: optional — แนบสลิปเพื่อให้ admin ตรวจสอบ manual -->
+            <div id="tx-slip-row" class="form-row">
+              <label id="tx-slip-label">Slip Image — ใช้สำหรับ manual verify (base64 หรือ URL)</label>
+              <textarea id="tx-slip" placeholder="data:image/png;base64,..."></textarea>
+              <small id="tx-slip-hint" style="color:#888;font-size:10px">PROMPTPAY: optional แนบสลิปเพื่อ admin review | SLIP: required</small>
+            </div>
+            <button class="btn btn-success" onclick="submitPayment()">Submit Payment</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List Transactions <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Page</label><input id="tx-page" value="1" type="number" /></div>
+            <div class="form-row"><label>Limit</label><input id="tx-limit" value="10" type="number" /></div>
+            <button class="btn btn-primary" onclick="listTx()">List Transactions</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Approve Transaction (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Transaction ID</label><input id="tx-approve-id" value="1" type="number" /></div>
+            <button class="btn btn-success" onclick="call('PATCH','/api/transactions/'+document.getElementById('tx-approve-id').value+'/approve')">Approve</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Reject Transaction (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Transaction ID</label><input id="tx-reject-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Reason</label><input id="tx-reject-reason" placeholder="เหตุผลการปฏิเสธ" /></div>
+            <button class="btn btn-danger" onclick="rejectTx()">Reject</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VPS PANEL -->
+      <div id="panel-vps" class="panel">
+        <div class="section">
+          <div class="section-title">List VPS <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Page</label><input id="vps-page" value="1" type="number" /></div>
+            <div class="form-row"><label>Limit</label><input id="vps-limit" value="10" type="number" /></div>
+            <button class="btn btn-primary" onclick="listVps()">List VPS</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Get VPS By ID <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="vps-id" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/vps/'+document.getElementById('vps-id').value)">Get VPS</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">VPS Actions <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="vps-action-id" value="1" type="number" /></div>
+            <button class="btn btn-success" onclick="vpsAction('start')">▶ Start</button>
+            <button class="btn btn-danger" style="margin-top:6px" onclick="vpsAction('stop')">⏹ Stop</button>
+            <button class="btn btn-warn" style="margin-top:6px" onclick="vpsAction('reboot')">🔄 Reboot</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Renew VPS <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="vps-renew-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Promo Code (optional)</label><input id="vps-renew-promo" placeholder="SAVE10" /></div>
+            <button class="btn btn-primary" onclick="renewVps()">Create Renewal Order</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle Auto-Renew <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="vps-ar-id" value="1" type="number" /></div>
+            <div class="form-row">
+              <label>Auto-Renew</label>
+              <select id="vps-ar-enabled">
+                <option value="true">เปิด (true)</option>
+                <option value="false">ปิด (false)</option>
+              </select>
+            </div>
+            <div class="form-row"><label>Locked Promo ID (optional, ใส่ 0 เพื่อล้าง)</label><input id="vps-ar-promo-id" type="number" placeholder="ว่าง = ไม่เปลี่ยน" /></div>
+            <button class="btn btn-warn" onclick="toggleAutoRenew()">Set Auto-Renew</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Force Delete VPS (Admin) <span class="method method-del">DELETE</span></div>
+          <div class="section-body">
+            <p style="font-size:11px;color:#c62828;margin-bottom:8px">
+              ⚠ ลบ VPS ทันที โดยไม่รอ Grace Period<br>
+              Stop VM → Delete VM จาก Proxmox → คืน IP → Soft-delete DB → ส่งอีเมลแจ้ง User
+            </p>
+            <div class="form-row"><label>VPS ID</label><input id="vps-fdel-id" value="1" type="number" /></div>
+            <button class="btn btn-danger" onclick="confirmForceDelete(parseInt(document.getElementById('vps-fdel-id').value),'VPS #'+document.getElementById('vps-fdel-id').value)">🗑 Force Delete VPS</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Provision Queue (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/vps/queue')">Get Queue</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Manual Provision (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Order ID</label><input id="vps-prov-order" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('POST','/api/vps/provision/'+document.getElementById('vps-prov-order').value)">Provision</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS PANEL (Admin) -->
+      <div id="panel-users" class="panel">
+        <div class="section">
+          <div class="section-title">Health Check <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/health',null,false)">Health Check</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List Users (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Page</label><input id="usr-page" value="1" type="number" /></div>
+            <div class="form-row"><label>Limit</label><input id="usr-limit" value="10" type="number" /></div>
+            <button class="btn btn-primary" onclick="listUsers()">List Users</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Get User By ID (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>User ID</label><input id="usr-id" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/users/'+document.getElementById('usr-id').value)">Get User</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update User Info (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>User ID</label><input id="usr-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>First Name (optional)</label><input id="usr-upd-fname" /></div>
+            <div class="form-row"><label>Last Name (optional)</label><input id="usr-upd-lname" /></div>
+            <div class="form-row"><label>Phone (optional)</label><input id="usr-upd-phone" /></div>
+            <button class="btn btn-purple" onclick="updateUserAdmin()">Update User</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle User Status (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>User ID</label><input id="usr-toggle-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/users/'+document.getElementById('usr-toggle-id').value+'/status')">Toggle Status</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Change User Role (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>User ID</label><input id="usr-role-id" value="1" type="number" /></div>
+            <div class="form-row">
+              <label>New Role</label>
+              <select id="usr-role-val">
+                <option value="users">users</option>
+                <option value="support">support</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+            <button class="btn btn-warn" onclick="changeRole()">Change Role</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div id="panel-admin" class="panel">
+        <div class="section">
+          <div class="section-title">Audit Logs (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Actor User ID</label><input id="aud-actor" placeholder="ว่างเว้น = ทั้งหมด" /></div>
+            <div class="form-row">
+              <label>Entity</label>
+              <select id="aud-entity">
+                <option value="">ทั้งหมด</option>
+                <option>USER</option><option>VPS</option><option>ORDER</option>
+                <option>TRANSACTION</option><option>PACKAGE</option><option>OS_TEMPLATE</option>
+                <option>VM_SPEC</option><option>PROMOTION</option><option>POLICY</option>
+                <option>IP_POOL</option><option>SYSTEM_CONFIG</option><option>EMAIL_BROADCAST</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Action</label>
+              <select id="aud-action">
+                <option value="">ทั้งหมด</option>
+                <option>CREATE</option><option>UPDATE</option><option>ENABLE</option>
+                <option>DISABLE</option><option>APPROVE</option><option>REJECT</option>
+                <option>CANCEL</option><option>START</option><option>STOP</option>
+                <option>REBOOT</option><option>EXPIRE</option><option>ROLE_CHANGE</option>
+                <option>BROADCAST</option>
+              </select>
+            </div>
+            <div class="form-row"><label>From (YYYY-MM-DD)</label><input id="aud-from" type="date" /></div>
+            <div class="form-row"><label>To (YYYY-MM-DD)</label><input id="aud-to" type="date" /></div>
+            <div class="form-row"><label>Page</label><input id="aud-page" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="listAudit()">List Audit Logs</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Send Email Broadcast (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row">
+              <label>Type</label>
+              <select id="bc-type">
+                <option>ANNOUNCEMENT</option>
+                <option>MAINTENANCE</option>
+                <option>EMERGENCY</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Target</label>
+              <select id="bc-target">
+                <option>ALL</option>
+                <option>ACTIVE_VPS</option>
+                <option>EXPIRING_SOON</option>
+              </select>
+            </div>
+            <div class="form-row"><label>Subject</label><input id="bc-subject" value="แจ้งข่าวสาร" /></div>
+            <div class="form-row"><label>Body (HTML/text)</label><textarea id="bc-message">ข้อความทดสอบ</textarea></div>
+            <button class="btn btn-warn" onclick="sendBroadcast()">Send Broadcast</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">List Broadcasts (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Page</label><input id="bc-page" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="listBroadcasts()">List Broadcasts</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Get Broadcast By ID (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Broadcast ID</label><input id="bc-get-id" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/broadcasts/'+document.getElementById('bc-get-id').value)">Get Broadcast</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SYSTEM PANEL -->
+      <div id="panel-system" class="panel">
+        <div class="section">
+          <div class="section-title">List System Configs <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <button class="btn btn-primary" onclick="call('GET','/api/system-configs')">List All</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Get Config By Key <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Key</label><input id="cfg-key" value="proxmox.host" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/system-configs/'+document.getElementById('cfg-key').value)">Get Config</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update Config (Admin) <span class="method method-put">PUT</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Key</label><input id="cfg-upd-key" value="proxmox.host" /></div>
+            <div class="form-row"><label>Value</label><input id="cfg-upd-val" value="" /></div>
+            <button class="btn btn-warn" onclick="updateConfig()">Update Config</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">IP Pools (Admin) <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>Page</label><input id="ip-page" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="listIp()">List IP Pools</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Add IP Pool (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>IP Address</label><input id="ip-addr" value="192.168.1.100" /></div>
+            <div class="form-row">
+              <label>Type</label>
+              <select id="ip-type">
+                <option value="PUBLIC">PUBLIC</option>
+                <option value="PRIVATE">PRIVATE</option>
+              </select>
+            </div>
+            <div class="form-row"><label>Note (optional)</label><input id="ip-note" placeholder="หมายเหตุ" /></div>
+            <button class="btn btn-success" onclick="addIp()">Add IP Pool</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Bulk Add IP Range (Admin) <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>IP Start</label><input id="ip-range-start" value="192.168.1.100" /></div>
+            <div class="form-row"><label>IP End</label><input id="ip-range-end" value="192.168.1.110" /></div>
+            <div class="form-row">
+              <label>Type</label>
+              <select id="ip-range-type">
+                <option value="PUBLIC">PUBLIC</option>
+                <option value="PRIVATE">PRIVATE</option>
+              </select>
+            </div>
+            <p style="font-size:11px;color:#888;margin-top:4px">max 256 IPs · ซ้ำ = skip อัตโนมัติ</p>
+            <button class="btn btn-success" onclick="addIpRange()">Bulk Add IP Range</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Update IP Pool Entry (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>IP Pool ID</label><input id="ip-upd-id" value="1" type="number" /></div>
+            <div class="form-row"><label>New IP (optional)</label><input id="ip-upd-addr" placeholder="192.168.1.101" /></div>
+            <div class="form-row">
+              <label>Type (optional)</label>
+              <select id="ip-upd-type">
+                <option value="">— ไม่เปลี่ยน —</option>
+                <option value="PUBLIC">PUBLIC</option>
+                <option value="PRIVATE">PRIVATE</option>
+              </select>
+            </div>
+            <button class="btn btn-purple" onclick="updateIp()">Update IP Pool</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Toggle IP Pool Status (Admin) <span class="method method-patch">PATCH</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>IP Pool ID</label><input id="ip-toggle-id" value="1" type="number" /></div>
+            <button class="btn btn-warn" onclick="call('PATCH','/api/ip-pools/'+document.getElementById('ip-toggle-id').value+'/status')">Toggle Status</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Flush Redis Cache (Admin) <span class="method method-del">DELETE</span></div>
+          <div class="section-body">
+            <p style="font-size:11px;color:#666;margin-bottom:8px">
+              ล้าง: rate limits · syscfg · user_status · provision locks<br>
+              <strong style="color:#c62828">ไม่ล้าง</strong>: refresh tokens · token blocklist
+            </p>
+            <button class="btn btn-danger" onclick="flushRedis()">🗑 Flush Redis Cache</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAT / PORT RULES PANEL (Phase 8) -->
+      <div id="panel-nat" class="panel">
+        <div class="section">
+          <div class="section-title">List Port Rules <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="nat-vps-id" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/vps/'+document.getElementById('nat-vps-id').value+'/port-rules')">List Rules</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Add Port Rule <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="nat-add-vps-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Private IP</label><input id="nat-private-ip" value="192.168.1.10" /></div>
+            <div class="form-row"><label>Private Port (1–65535)</label><input id="nat-private-port" value="80" type="number" /></div>
+            <div class="form-row">
+              <label>Protocol</label>
+              <select id="nat-protocol">
+                <option value="TCP">TCP</option>
+                <option value="UDP">UDP</option>
+                <option value="BOTH">BOTH</option>
+              </select>
+            </div>
+            <button class="btn btn-success" onclick="natAddRule()">Add Rule</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Delete Port Rule <span class="method method-del">DELETE</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="nat-del-vps-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Rule ID</label><input id="nat-del-rule-id" value="1" type="number" /></div>
+            <button class="btn btn-danger" onclick="natDeleteRule()">Delete Rule</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPGRADE PANEL (Phase 9) -->
+      <div id="panel-upgrade" class="panel">
+        <div class="section">
+          <div class="section-title">Upgrade History <span class="method method-get">GET</span></div>
+          <div class="section-body">
+            <div class="form-row"><label>VPS ID</label><input id="upg-vps-id" value="1" type="number" /></div>
+            <div class="form-row"><label>Page</label><input id="upg-page" value="1" type="number" /></div>
+            <button class="btn btn-primary" onclick="call('GET','/api/vps/'+document.getElementById('upg-vps-id').value+'/upgrade/history?page='+document.getElementById('upg-page').value)">Get History</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Package Upgrade <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <p style="font-size:11px;color:#666;margin-bottom:8px">เปลี่ยน Package (คิดค่า pro-rate)</p>
+            <div class="form-row"><label>VPS ID</label><input id="upg-pkg-vps-id" value="1" type="number" /></div>
+            <div class="form-row"><label>New Package ID</label><input id="upg-pkg-id" value="2" type="number" /></div>
+            <button class="btn btn-warn" onclick="upgradePackage()">Upgrade Package</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Custom Resource Upgrade <span class="method method-post">POST</span></div>
+          <div class="section-body">
+            <p style="font-size:11px;color:#666;margin-bottom:8px">เพิ่ม/ลด resources ทีละหน่วย (ราคาต่อหน่วย/เดือน)</p>
+            <div class="form-row"><label>VPS ID</label><input id="upg-cus-vps-id" value="1" type="number" /></div>
+            <div class="form-row"><label>CPU Cores (optional)</label><input id="upg-cores" placeholder="ว่าง = ไม่เปลี่ยน" type="number" /></div>
+            <div class="form-row"><label>Memory GiB (4–16, optional)</label><input id="upg-memory" placeholder="ว่าง = ไม่เปลี่ยน" type="number" /></div>
+            <div class="form-row"><label>Disk GB (optional)</label><input id="upg-disk" placeholder="ว่าง = ไม่เปลี่ยน" type="number" /></div>
+            <button class="btn btn-purple" onclick="upgradeCustom()">Upgrade Custom</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MONITOR PANEL -->
+      <div id="panel-monitor" class="panel">
+        <div class="monitor-toolbar">
+          <button class="btn btn-success" id="mon-start-btn" onclick="startMonitor()" style="width:auto;margin:0;padding:6px 16px;font-size:13px">▶ Start Monitor</button>
+          <button class="btn btn-danger"  id="mon-stop-btn"  onclick="stopMonitor()"  style="width:auto;margin:0;padding:6px 16px;font-size:13px;display:none">⏹ Stop</button>
+          <select class="mon-select" id="mon-interval">
+            <option value="5000">ทุก 5s</option>
+            <option value="10000">ทุก 10s</option>
+            <option value="30000">ทุก 30s</option>
+          </select>
+          <span class="mon-count" id="mon-count" style="display:none"></span>
+          <span class="mon-last" id="mon-last">-</span>
+          <div class="view-toggle" style="margin-left:auto">
+            <button class="view-btn active" id="view-card" onclick="setView('card')">⊞ Card</button>
+            <button class="view-btn"        id="view-table" onclick="setView('table')">☰ Table</button>
+          </div>
+        </div>
+        <div id="vps-grid" class="vps-grid">
+          <div class="monitor-empty">กด ▶ Start Monitor เพื่อดูสถานะ VPS แบบ real-time</div>
+        </div>
+      </div>
+
+    </div><!-- /actions -->
+
+    <!-- Response -->
+    <div class="response-panel">
+      <div class="response-header">
+        <span id="resp-method">-</span>
+        <span id="resp-endpoint" class="endpoint-tag">-</span>
+        <span id="resp-status" class="status-badge status-xxx">-</span>
+        <span id="resp-time" style="color:#666"></span>
+        <button class="clear-btn" onclick="clearResponse()">Clear</button>
+      </div>
+      <div class="response-body">
+        <pre id="response-pre">// ผลลัพธ์จะแสดงที่นี่
+// กดปุ่มใดก็ได้ทางซ้าย</pre>
+      </div>
+    </div>
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+let accessToken = '';
+let storedRefreshToken = '';
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function base() { return document.getElementById('baseUrl').value.replace(/\/$/, ''); }
+
+function headers(withAuth = true) {
+  const h = { 'Content-Type': 'application/json' };
+  if (withAuth && accessToken) h['Authorization'] = 'Bearer ' + accessToken;
+  return h;
+}
+
+function updateTokenStatus() {
+  const el = document.getElementById('tokenStatus');
+  if (accessToken) {
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const exp = new Date(payload.exp * 1000);
+      const role = payload.role || '?';
+      el.textContent = `✓ ${role} (หมดอายุ ${exp.toLocaleTimeString('th-TH')})`;
+      el.className = 'token-status ok';
+    } catch { el.textContent = '✓ Token Set'; el.className = 'token-status ok'; }
+  } else {
+    el.textContent = 'ไม่มี Token'; el.className = 'token-status no';
+  }
+}
+
+function showResponse(method, endpoint, status, data, elapsed) {
+  document.getElementById('resp-method').textContent = method;
+  document.getElementById('resp-endpoint').textContent = endpoint;
+  document.getElementById('resp-time').textContent = elapsed ? `${elapsed}ms` : '';
+  const badge = document.getElementById('resp-status');
+  badge.textContent = status;
+  badge.className = 'status-badge ' +
+    (status >= 200 && status < 300 ? 'status-2xx' :
+     status >= 400 && status < 500 ? 'status-4xx' :
+     status >= 500 ? 'status-5xx' : 'status-xxx');
+  document.getElementById('response-pre').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+}
+
+function syntaxHighlight(json) {
+  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls = 'json-num';
+      if (/^"/.test(m)) cls = /:$/.test(m) ? 'json-key' : 'json-str';
+      else if (/true|false/.test(m)) cls = 'json-bool';
+      else if (/null/.test(m)) cls = 'json-null';
+      return `<span class="${cls}">${m}</span>`;
+    });
+}
+
+function clearResponse() {
+  document.getElementById('response-pre').innerHTML = '// ล้างแล้ว';
+  document.getElementById('resp-method').textContent = '-';
+  document.getElementById('resp-endpoint').textContent = '-';
+  document.getElementById('resp-status').textContent = '-';
+  document.getElementById('resp-status').className = 'status-badge status-xxx';
+  document.getElementById('resp-time').textContent = '';
+}
+
+async function call(method, path, body = null, auth = true) {
+  const url = base() + path;
+  const t0 = Date.now();
+  try {
+    const opts = { method, headers: headers(auth) };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    const elapsed = Date.now() - t0;
+    let data;
+    try { data = await res.json(); } catch { data = { raw: await res.text() }; }
+    showResponse(method, path, res.status, data, elapsed);
+    return { status: res.status, data };
+  } catch (err) {
+    showResponse(method, path, 0, { error: err.message }, Date.now() - t0);
+    return null;
+  }
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+async function login() {
+  const r = await call('POST', '/api/auth/login', {
+    email: document.getElementById('login-email').value,
+    password: document.getElementById('login-pass').value,
+  }, false);
+  const d = r?.data?.data;
+  if (d?.access_token) {
+    accessToken = d.access_token;
+    storedRefreshToken = d.refresh_token || '';
+    document.getElementById('rf-token').value = storedRefreshToken;
+    updateTokenStatus();
+  }
+}
+
+async function refreshToken_fn() {
+  const token = document.getElementById('rf-token').value.trim();
+  const r = await call('POST', '/api/auth/refresh', { refresh_token: token }, false);
+  const d = r?.data?.data;
+  if (d?.access_token) {
+    accessToken = d.access_token;
+    storedRefreshToken = d.refresh_token || storedRefreshToken;
+    document.getElementById('rf-token').value = storedRefreshToken;
+    updateTokenStatus();
+  }
+}
+function refreshToken() { refreshToken_fn(); }
+
+async function register() {
+  const policies = document.getElementById('reg-policies').value
+    .split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  await call('POST', '/api/auth/register', {
+    email: document.getElementById('reg-email').value,
+    password: document.getElementById('reg-pass').value,
+    first_name: document.getElementById('reg-fname').value,
+    last_name: document.getElementById('reg-lname').value,
+    phone: document.getElementById('reg-phone').value,
+    address1: document.getElementById('reg-addr1').value,
+    address3: document.getElementById('reg-addr3').value,
+    address4: document.getElementById('reg-addr4').value,
+    address5: document.getElementById('reg-addr5').value,
+    address6: document.getElementById('reg-addr6').value,
+    policy_ids: policies,
+  }, false);
+}
+
+async function me() { await call('GET', '/api/auth/me'); }
+
+async function logout() {
+  await call('POST', '/api/auth/logout');
+  accessToken = ''; storedRefreshToken = ''; updateTokenStatus();
+}
+
+function setManualToken() {
+  accessToken = document.getElementById('manual-token').value.trim();
+  updateTokenStatus();
+}
+
+function clearToken() {
+  accessToken = ''; storedRefreshToken = ''; updateTokenStatus();
+}
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
+
+async function updateMe() {
+  const body = {};
+  const f = (id) => document.getElementById(id).value.trim();
+  if (f('upd-fname')) body.first_name = f('upd-fname');
+  if (f('upd-lname')) body.last_name = f('upd-lname');
+  if (f('upd-phone')) body.phone = f('upd-phone');
+  if (f('upd-addr1')) body.address1 = f('upd-addr1');
+  if (f('upd-addr3')) body.address3 = f('upd-addr3');
+  if (f('upd-addr4')) body.address4 = f('upd-addr4');
+  if (f('upd-addr5')) body.address5 = f('upd-addr5');
+  if (f('upd-addr6')) body.address6 = f('upd-addr6');
+  await call('PUT', '/api/users/me', body);
+}
+
+async function changePassword() {
+  await call('PUT', '/api/users/me/password', {
+    current_password: document.getElementById('cp-current').value,
+    new_password: document.getElementById('cp-new').value,
+  });
+}
+
+async function changeEmail() {
+  await call('PUT', '/api/users/me/email', {
+    email: document.getElementById('ce-email').value,
+  });
+}
+
+// ─── Package Categories ───────────────────────────────────────────────────────
+
+async function createCategory() {
+  const body = { name: document.getElementById('cat-new-name').value };
+  const desc = document.getElementById('cat-new-desc').value.trim();
+  if (desc) body.description = desc;
+  await call('POST', '/api/packages/categories', body);
+}
+
+async function updateCategory() {
+  const id = document.getElementById('cat-upd-id').value;
+  const body = {};
+  const name = document.getElementById('cat-upd-name').value.trim();
+  const desc = document.getElementById('cat-upd-desc').value.trim();
+  if (name) body.name = name;
+  if (desc) body.description = desc;
+  await call('PUT', `/api/packages/categories/${id}`, body);
+}
+
+// ─── Packages ────────────────────────────────────────────────────────────────
+
+async function listPackages() {
+  const catId = document.getElementById('pkg-cat-filter').value.trim();
+  const qs = catId ? `?category_id=${catId}` : '';
+  await call('GET', `/api/packages${qs}`);
+}
+
+async function createPackage() {
+  const body = {
+    name: document.getElementById('pkg-new-name').value,
+    description: document.getElementById('pkg-new-desc').value,
+    price: parseFloat(document.getElementById('pkg-new-price').value),
+    period: parseInt(document.getElementById('pkg-new-period').value),
+    os_id: parseInt(document.getElementById('pkg-new-osid').value),
+    vm_id: parseInt(document.getElementById('pkg-new-vmid').value),
+  };
+  const catId = document.getElementById('pkg-new-catid').value.trim();
+  if (catId) body.category_id = parseInt(catId);
+  await call('POST', '/api/packages', body);
+}
+
+async function updatePackage() {
+  const id = document.getElementById('pkg-upd-id').value;
+  const body = {};
+  const name = document.getElementById('pkg-upd-name').value.trim();
+  const price = document.getElementById('pkg-upd-price').value.trim();
+  if (name) body.name = name;
+  if (price) body.price = parseFloat(price);
+  await call('PUT', `/api/packages/${id}`, body);
+}
+
+async function createOs() {
+  await call('POST', '/api/packages/os', {
+    os_name: document.getElementById('os-name').value,
+    os_version: document.getElementById('os-version').value,
+    vmid: parseInt(document.getElementById('os-vmid').value),
+  });
+}
+
+async function updateOs() {
+  const id = document.getElementById('os-upd-id').value;
+  const body = {};
+  const n = document.getElementById('os-upd-name').value.trim();
+  const v = document.getElementById('os-upd-ver').value.trim();
+  const m = document.getElementById('os-upd-vmid').value.trim();
+  if (n) body.os_name = n;
+  if (v) body.os_version = v;
+  if (m) body.vmid = parseInt(m);
+  await call('PUT', `/api/packages/os/${id}`, body);
+}
+
+async function createVm() {
+  await call('POST', '/api/packages/vm', {
+    core: parseInt(document.getElementById('vm-core').value),
+    memory: document.getElementById('vm-memory').value,
+    size: document.getElementById('vm-size').value,
+  });
+}
+
+async function updateVm() {
+  const id = document.getElementById('vm-upd-id').value;
+  const body = {};
+  const c = document.getElementById('vm-upd-core').value.trim();
+  const m = document.getElementById('vm-upd-memory').value.trim();
+  const s = document.getElementById('vm-upd-size').value.trim();
+  if (c) body.core = parseInt(c);
+  if (m) body.memory = m;
+  if (s) body.size = s;
+  await call('PUT', `/api/packages/vm/${id}`, body);
+}
+
+// ─── Policies ────────────────────────────────────────────────────────────────
+
+async function createPolicy() {
+  await call('POST', '/api/policies', {
+    policie_title: document.getElementById('pol-title').value,
+    policies_detail: document.getElementById('pol-detail').value,
+    policies_type: document.getElementById('pol-type').value,
+    version: document.getElementById('pol-version').value,
+  });
+}
+
+async function updatePolicy() {
+  const id = document.getElementById('pol-upd-id').value;
+  const body = {};
+  const t = document.getElementById('pol-upd-title').value.trim();
+  const v = document.getElementById('pol-upd-version').value.trim();
+  if (t) body.policie_title = t;
+  if (v) body.version = v;
+  await call('PUT', `/api/policies/${id}`, body);
+}
+
+// ─── Promotions ───────────────────────────────────────────────────────────────
+
+async function createPromotion() {
+  const body = {
+    code_name: document.getElementById('promo-code').value,
+    description: document.getElementById('promo-desc').value,
+    type: document.getElementById('promo-type').value,
+    discount: parseFloat(document.getElementById('promo-discount').value),
+  };
+  const exp = document.getElementById('promo-exp').value;
+  if (exp) body.expired_at = exp;
+  const maxUses = document.getElementById('promo-max-uses').value;
+  if (maxUses) body.max_uses = parseInt(maxUses);
+  const maxPerUser = document.getElementById('promo-max-per-user').value;
+  if (maxPerUser) body.max_uses_per_user = parseInt(maxPerUser);
+  await call('POST', '/api/promotions', body);
+}
+
+async function updatePromotion() {
+  const id = document.getElementById('promo-upd-id').value;
+  const body = {};
+  const c = document.getElementById('promo-upd-code').value.trim();
+  const d = document.getElementById('promo-upd-discount').value.trim();
+  if (c) body.code_name = c;
+  if (d) body.discount = parseFloat(d);
+  await call('PUT', `/api/promotions/${id}`, body);
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+async function createOrder() {
+  const body = { package_id: parseInt(document.getElementById('ord-pkg').value) };
+  const promo = document.getElementById('ord-promo').value.trim();
+  if (promo) body.promo_code = promo;
+  await call('POST', '/api/orders', body);
+}
+
+async function listOrders() {
+  const page = document.getElementById('ord-page').value;
+  const limit = document.getElementById('ord-limit').value;
+  await call('GET', `/api/orders?page=${page}&limit=${limit}`);
+}
+
+// ─── Transactions ─────────────────────────────────────────────────────────────
+
+function togglePaymentFields() {
+  const m = document.getElementById('tx-method').value;
+  document.getElementById('tx-voucher-row').style.display = m === 'TRUEMONEY' ? '' : 'none';
+  // Slip visible for SLIP (required) and PROMPTPAY (optional, for manual admin review)
+  const slipRow = document.getElementById('tx-slip-row');
+  slipRow.style.display = m === 'TRUEMONEY' ? 'none' : '';
+  document.getElementById('tx-slip-hint').textContent =
+    m === 'SLIP'
+      ? 'SLIP: required — แนบสลิปธนาคารเพื่อ auto-verify ผ่าน SlipOK'
+      : 'PROMPTPAY: optional — แนบสลิปเพื่อให้ admin ตรวจสอบ manual';
+}
+
+async function submitPayment() {
+  const method = document.getElementById('tx-method').value;
+  const body = {
+    order_id: parseInt(document.getElementById('tx-order').value),
+    payment_method: method,
+  };
+  if (method === 'TRUEMONEY') body.voucher_code = document.getElementById('tx-voucher').value;
+  if (method === 'SLIP' || method === 'PROMPTPAY') {
+    const slip = document.getElementById('tx-slip').value.trim();
+    if (slip) body.slip_image = slip;
+  }
+  await call('POST', '/api/transactions', body);
+}
+
+async function listTx() {
+  const page = document.getElementById('tx-page').value;
+  const limit = document.getElementById('tx-limit').value;
+  await call('GET', `/api/transactions?page=${page}&limit=${limit}`);
+}
+
+async function rejectTx() {
+  const id = document.getElementById('tx-reject-id').value;
+  const reason = document.getElementById('tx-reject-reason').value;
+  await call('PATCH', `/api/transactions/${id}/reject`, reason ? { reason } : {});
+}
+
+// ─── VPS ─────────────────────────────────────────────────────────────────────
+
+async function listVps() {
+  const page = document.getElementById('vps-page').value;
+  const limit = document.getElementById('vps-limit').value;
+  await call('GET', `/api/vps?page=${page}&limit=${limit}`);
+}
+
+async function vpsAction(action) {
+  const id = document.getElementById('vps-action-id').value;
+  await call('POST', `/api/vps/${id}/${action}`);
+}
+
+async function renewVps() {
+  const id = document.getElementById('vps-renew-id').value;
+  const promo = document.getElementById('vps-renew-promo').value.trim();
+  const body = promo ? { promo_code: promo } : {};
+  await call('POST', `/api/vps/${id}/renew`, body);
+}
+
+async function toggleAutoRenew() {
+  const id = document.getElementById('vps-ar-id').value;
+  const autoRenew = document.getElementById('vps-ar-enabled').value === 'true';
+  const promoIdVal = document.getElementById('vps-ar-promo-id').value.trim();
+  const body = { auto_renew: autoRenew };
+  if (promoIdVal !== '') {
+    const n = parseInt(promoIdVal);
+    body.locked_promo_id = n === 0 ? null : n;
+  }
+  await call('PATCH', `/api/vps/${id}/auto-renew`, body);
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+async function listUsers() {
+  const page = document.getElementById('usr-page').value;
+  const limit = document.getElementById('usr-limit').value;
+  await call('GET', `/api/users?page=${page}&limit=${limit}`);
+}
+
+async function changeRole() {
+  const id = document.getElementById('usr-role-id').value;
+  const role_name = document.getElementById('usr-role-val').value;
+  await call('PATCH', `/api/users/${id}/role`, { role_name });
+}
+
+async function updateUserAdmin() {
+  const id = document.getElementById('usr-upd-id').value;
+  const body = {};
+  const fn = document.getElementById('usr-upd-fname').value.trim();
+  const ln = document.getElementById('usr-upd-lname').value.trim();
+  const ph = document.getElementById('usr-upd-phone').value.trim();
+  if (fn) body.first_name = fn;
+  if (ln) body.last_name = ln;
+  if (ph) body.phone = ph;
+  await call('PUT', `/api/users/${id}`, body);
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+
+async function listAudit() {
+  const params = new URLSearchParams();
+  const actor = document.getElementById('aud-actor').value;
+  const entity = document.getElementById('aud-entity').value;
+  const action = document.getElementById('aud-action').value;
+  const from = document.getElementById('aud-from').value;
+  const to = document.getElementById('aud-to').value;
+  const page = document.getElementById('aud-page').value;
+  if (actor)  params.set('actor_id', actor);
+  if (entity) params.set('entity', entity);
+  if (action) params.set('action', action);
+  if (from)   params.set('from', from);
+  if (to)     params.set('to', to);
+  params.set('page', page);
+  await call('GET', `/api/audit-logs?${params}`);
+}
+
+async function sendBroadcast() {
+  await call('POST', '/api/broadcasts', {
+    type:    document.getElementById('bc-type').value,
+    target:  document.getElementById('bc-target').value,
+    subject: document.getElementById('bc-subject').value,
+    body:    document.getElementById('bc-message').value,
+  });
+}
+
+async function listBroadcasts() {
+  const page = document.getElementById('bc-page').value;
+  await call('GET', `/api/broadcasts?page=${page}`);
+}
+
+// ─── System Config ────────────────────────────────────────────────────────────
+
+async function updateConfig() {
+  const key = document.getElementById('cfg-upd-key').value;
+  const value = document.getElementById('cfg-upd-val').value;
+  await call('PUT', `/api/system-configs/${key}`, { value });
+}
+
+// ─── IP Pools ─────────────────────────────────────────────────────────────────
+
+async function listIp() {
+  const page = document.getElementById('ip-page').value;
+  await call('GET', `/api/ip-pools?page=${page}`);
+}
+
+async function addIp() {
+  const body = {
+    ip: document.getElementById('ip-addr').value,
+    type: document.getElementById('ip-type').value,
+  };
+  const note = document.getElementById('ip-note').value.trim();
+  if (note) body.note = note;
+  await call('POST', '/api/ip-pools', body);
+}
+
+async function updateIp() {
+  const id = document.getElementById('ip-upd-id').value;
+  const body = {};
+  const addr = document.getElementById('ip-upd-addr').value.trim();
+  const type = document.getElementById('ip-upd-type').value;
+  if (addr) body.ip = addr;
+  if (type) body.type = type;
+  await call('PATCH', `/api/ip-pools/${id}`, body);
+}
+
+async function addIpRange() {
+  const body = {
+    ip_start: document.getElementById('ip-range-start').value.trim(),
+    ip_end:   document.getElementById('ip-range-end').value.trim(),
+    type:     document.getElementById('ip-range-type').value,
+  };
+  await call('POST', '/api/ip-pools/range', body);
+}
+
+// ─── Monitor ──────────────────────────────────────────────────────────────────
+
+let monInterval = null;
+let monView = 'card'; // 'card' | 'table'
+
+function setView(v) {
+  monView = v;
+  document.getElementById('view-card').classList.toggle('active', v === 'card');
+  document.getElementById('view-table').classList.toggle('active', v === 'table');
+  if (monInterval) refreshMonitor();
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  const main = document.querySelector('.main');
+  if (name === 'monitor') {
+    main.classList.add('monitor-mode');
+  } else {
+    main.classList.remove('monitor-mode');
+    stopMonitor();
+  }
+}
+
+async function silentFetch(method, path) {
+  try {
+    const res = await fetch(base() + path, { method, headers: headers() });
+    return await res.json();
+  } catch { return null; }
+}
+
+async function startMonitor() {
+  if (!accessToken) { alert('ต้อง Login ก่อน'); return; }
+  document.getElementById('mon-start-btn').style.display = 'none';
+  document.getElementById('mon-stop-btn').style.display = '';
+  await refreshMonitor();
+  const interval = parseInt(document.getElementById('mon-interval').value);
+  monInterval = setInterval(refreshMonitor, interval);
+}
+
+function stopMonitor() {
+  clearInterval(monInterval);
+  monInterval = null;
+  document.getElementById('mon-start-btn').style.display = '';
+  document.getElementById('mon-stop-btn').style.display = 'none';
+}
+
+async function refreshMonitor() {
+  const r = await silentFetch('GET', '/api/vps?limit=50');
+  if (!r || !r.data) return;
+  const list = r.data.vps || [];
+  const total = r.data.total || list.length;
+
+  document.getElementById('mon-last').textContent = 'อัปเดต ' + new Date().toLocaleTimeString('th-TH');
+  const countEl = document.getElementById('mon-count');
+  countEl.textContent = `${list.length} / ${total} เครื่อง`;
+  countEl.style.display = '';
+
+  renderVpsCards(list);
+
+  // Fetch live_status for ALL VPS every cycle — keeps status current
+  list.forEach(v => fetchLiveStatus(v.id));
+}
+
+const DANGER_BOX_HTML = `
+  <div class="danger-box" id="vps-danger-box">
+    <h4>⚠ เกี่ยวกับการลบ VPS</h4>
+    <p>การลบอัตโนมัติ (cron job):<br>
+    • หมดอายุ → Stop ทันที + grace period 7 วัน<br>
+    • หลัง 7 วัน → ลบออกจาก Proxmox + คืน IP<br>
+    <strong style="color:#c62828">Force Delete (Admin)</strong>: <code>DELETE /api/vps/:id</code><br>
+    ลบทันทีโดยข้าม grace period — ข้อมูลใน VM หายถาวร</p>
+  </div>`;
+
+function makeCardHTML(vps) {
+  const ip     = vps.ip_assignment?.ip_pool?.ip ?? '-';
+  const expiry = vps.expired_at
+    ? new Date(vps.expired_at).toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' })
+    : '-';
+  const pkg = vps.order?.package?.name ?? '-';
+  return `
+    <div class="vps-card live-loading" id="vcard-${vps.id}" data-db-status="${vps.status}">
+      <div class="vps-card-head">
+        <div class="live-dot dot-blue" id="vdot-${vps.id}"></div>
+        <strong title="${vps.name}">${vps.name}</strong>
+        <span class="live-label label-loading" id="vlabel-${vps.id}">กำลังโหลด...</span>
+      </div>
+      <div class="vps-card-body" id="vbody-${vps.id}">
+        <div>🆔 ID: <span>#${vps.id}</span> &nbsp; VMID: <span>${vps.vmid}</span></div>
+        <div>🌐 IP: <span>${ip}</span></div>
+        <div>📦 ${pkg}</div>
+        <div>⏰ หมดอายุ: <span>${expiry}</span></div>
+      </div>
+      <div class="vps-card-actions">
+        <button class="cbtn cbtn-start"  onclick="cardAction(${vps.id},'start')">▶ Start</button>
+        <button class="cbtn cbtn-stop"   onclick="confirmStop(${vps.id},'${vps.name}')">⏹ Stop</button>
+        <button class="cbtn cbtn-reboot" onclick="cardAction(${vps.id},'reboot')">🔄 Reboot</button>
+        <button class="cbtn cbtn-renew"  onclick="cardRenew(${vps.id})">↻ Renew</button>
+        <button class="cbtn cbtn-fdel"   onclick="confirmForceDelete(${vps.id},'${vps.name}')">🗑 Force Del</button>
+      </div>
+    </div>`;
+}
+
+function renderVpsCards(list) {
+  if (monView === 'table') { renderVpsTable(list); return; }
+  const grid = document.getElementById('vps-grid');
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="monitor-empty">ไม่มี VPS ในระบบ</div>';
+    return;
+  }
+
+  const newIds = new Set(list.map(v => String(v.id)));
+
+  // Remove cards no longer in list
+  grid.querySelectorAll('[id^="vcard-"]').forEach(el => {
+    if (!newIds.has(el.id.replace('vcard-', ''))) el.remove();
+  });
+
+  // Ensure danger box exists
+  if (!document.getElementById('vps-danger-box')) {
+    grid.insertAdjacentHTML('beforeend', DANGER_BOX_HTML);
+  }
+
+  const dangerBox = document.getElementById('vps-danger-box');
+
+  list.forEach(vps => {
+    if (document.getElementById(`vcard-${vps.id}`)) {
+      // Card exists — update body text only, leave dot/label untouched
+      const body = document.getElementById(`vbody-${vps.id}`);
+      if (body) {
+        const ip     = vps.ip_assignment?.ip_pool?.ip ?? '-';
+        const expiry = vps.expired_at
+          ? new Date(vps.expired_at).toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' })
+          : '-';
+        const pkg = vps.order?.package?.name ?? '-';
+        body.innerHTML = `
+          <div>🆔 ID: <span>#${vps.id}</span> &nbsp; VMID: <span>${vps.vmid}</span></div>
+          <div>🌐 IP: <span>${ip}</span></div>
+          <div>📦 ${pkg}</div>
+          <div>⏰ หมดอายุ: <span>${expiry}</span></div>`;
+      }
+    } else {
+      // New card — insert before danger box
+      dangerBox.insertAdjacentHTML('beforebegin', makeCardHTML(vps));
+    }
+  });
+}
+
+function renderVpsTable(list) {
+  const grid = document.getElementById('vps-grid');
+  if (!list.length) {
+    grid.innerHTML = '<div class="monitor-empty">ไม่มี VPS ในระบบ</div>';
+    return;
+  }
+
+  const newIds = new Set(list.map(v => String(v.id)));
+
+  // Full rebuild if no table exists yet or IDs changed
+  const existing = grid.querySelector('.vps-table');
+  const existingIds = existing
+    ? new Set([...existing.querySelectorAll('[id^="trow-"]')].map(r => r.id.replace('trow-', '')))
+    : new Set();
+  const sameIds = [...newIds].every(id => existingIds.has(id)) && newIds.size === existingIds.size;
+
+  if (!existing || !sameIds) {
+    grid.innerHTML = `
+      <table class="vps-table">
+        <thead><tr>
+          <th>ID</th><th>ชื่อ / VMID</th><th>IP</th><th>Package</th><th>หมดอายุ</th><th>Status</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="vps-tbody">
+          ${list.map(vps => {
+            const ip     = vps.ip_assignment?.ip_pool?.ip ?? '-';
+            const expiry = vps.expired_at
+              ? new Date(vps.expired_at).toLocaleDateString('th-TH', { day:'2-digit', month:'short', year:'2-digit' })
+              : '-';
+            const pkg = vps.order?.package?.name ?? '-';
+            return `<tr id="trow-${vps.id}" class="row-loading" data-db-status="${vps.status}">
+              <td>#${vps.id}</td>
+              <td><strong>${vps.name}</strong><br><small style="color:#888">vmid ${vps.vmid}</small></td>
+              <td>${ip}</td>
+              <td>${pkg}</td>
+              <td>${expiry}</td>
+              <td id="tstatus-${vps.id}"><span class="tbl-dot dot-blue" style="animation:blink 1s infinite"></span>กำลังโหลด...</td>
+              <td>
+                <div class="tbl-actions" id="tactions-${vps.id}">
+                  <button class="tbl-btn tbl-btn-start"  onclick="cardAction(${vps.id},'start')">▶</button>
+                  <button class="tbl-btn tbl-btn-stop"   onclick="confirmStop(${vps.id},'${vps.name}')">⏹</button>
+                  <button class="tbl-btn tbl-btn-reboot" onclick="cardAction(${vps.id},'reboot')">🔄</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  } else {
+    // Update data cells only (status updated by fetchLiveStatus)
+    list.forEach(vps => {
+      const row = document.getElementById(`trow-${vps.id}`);
+      if (row && vps.status !== undefined) row.dataset.dbStatus = String(vps.status);
+    });
+  }
+}
+
+async function fetchLiveStatus(vpsId) {
+  const r = await silentFetch('GET', `/api/vps/${vpsId}`);
+
+  // live_status is { status: "running"|"stopped", cpu, mem, ... } or null
+  const liveObj = r?.data?.live_status ?? null;
+  const liveStr = liveObj?.status ?? null;
+
+  if (monView === 'table') {
+    const row        = document.getElementById(`trow-${vpsId}`);
+    const statusCell = document.getElementById(`tstatus-${vpsId}`);
+    if (!row) return;
+
+    if (r?.data?.status !== undefined) row.dataset.dbStatus = String(r.data.status);
+    const dbRunning = row.dataset.dbStatus === 'true';
+
+    let status, isLive;
+    if (liveStr !== null) { status = liveStr; isLive = true; }
+    else { status = dbRunning ? 'running' : 'stopped'; isLive = false; }
+
+    row.className = status === 'running' ? 'row-running' : 'row-stopped';
+    if (statusCell) {
+      const dotCls = status === 'running' ? 'dot-green' : 'dot-red';
+      statusCell.innerHTML = `<span class="tbl-dot ${dotCls}"></span>${status === 'running' ? '● Running' : '● Stopped'}${isLive ? '' : ' (DB)'}`;
+    }
+  } else {
+    const card = document.getElementById(`vcard-${vpsId}`);
+    const dot  = document.getElementById(`vdot-${vpsId}`);
+    const lbl  = document.getElementById(`vlabel-${vpsId}`);
+    if (!card) return;
+
+    if (r?.data?.status !== undefined) card.dataset.dbStatus = String(r.data.status);
+    const dbRunning = card.dataset.dbStatus === 'true';
+
+    let status, isLive;
+    if (liveStr !== null) { status = liveStr; isLive = true; }
+    else { status = dbRunning ? 'running' : 'stopped'; isLive = false; }
+
+    card.className = 'vps-card ' + (status === 'running' ? 'live-running' : 'live-stopped');
+    dot.className  = 'live-dot '  + (status === 'running' ? 'dot-green'   : 'dot-red');
+    lbl.className  = 'live-label ' + (status === 'running' ? 'label-running' : 'label-stopped');
+    lbl.textContent = (status === 'running' ? '● Running' : '● Stopped') + (isLive ? '' : ' (DB)');
+  }
+}
+
+function setCardBusy(vpsId, label) {
+  if (monView === 'table') {
+    const row        = document.getElementById(`trow-${vpsId}`);
+    const statusCell = document.getElementById(`tstatus-${vpsId}`);
+    if (!row) return;
+    row.className = 'row-loading';
+    if (statusCell) statusCell.innerHTML = `<span class="tbl-dot dot-blue" style="animation:blink 1s infinite"></span>⟳ ${label}`;
+    document.getElementById(`tactions-${vpsId}`)?.querySelectorAll('.tbl-btn').forEach(b => b.disabled = true);
+  } else {
+    const card = document.getElementById(`vcard-${vpsId}`);
+    const dot  = document.getElementById(`vdot-${vpsId}`);
+    const lbl  = document.getElementById(`vlabel-${vpsId}`);
+    if (!card) return;
+    card.className = 'vps-card live-loading';
+    dot.className  = 'live-dot dot-blue';
+    lbl.className  = 'live-label label-loading';
+    lbl.textContent = `⟳ ${label}`;
+    card.querySelectorAll('.cbtn').forEach(b => b.disabled = true);
+  }
+}
+
+function setCardFree(vpsId) {
+  if (monView === 'table') {
+    document.getElementById(`tactions-${vpsId}`)?.querySelectorAll('.tbl-btn').forEach(b => b.disabled = false);
+  } else {
+    document.getElementById(`vcard-${vpsId}`)?.querySelectorAll('.cbtn').forEach(b => b.disabled = false);
+  }
+}
+
+async function pollUntilStatus(vpsId, expected, maxTries = 18, intervalMs = 10000) {
+  for (let i = 0; i < maxTries; i++) {
+    await new Promise(res => setTimeout(res, intervalMs));
+    const r = await silentFetch('GET', `/api/vps/${vpsId}`);
+    const live = r?.data?.live_status?.status ?? null;
+    if (live === expected) { await fetchLiveStatus(vpsId); setCardFree(vpsId); return; }
+  }
+  // Timeout — refresh whatever state it's in now
+  await fetchLiveStatus(vpsId);
+  setCardFree(vpsId);
+}
+
+async function cardAction(vpsId, action) {
+  const labels = { start: 'Starting...', stop: 'Stopping...', reboot: 'Rebooting...' };
+  const expects = { start: 'running', stop: 'stopped', reboot: 'running' };
+  setCardBusy(vpsId, labels[action] || action + '...');
+  const r = await call('POST', `/api/vps/${vpsId}/${action}`);
+  if (r && r.status < 300) {
+    pollUntilStatus(vpsId, expects[action]);
+  } else {
+    await fetchLiveStatus(vpsId);
+    setCardFree(vpsId);
+  }
+}
+
+async function cardRenew(vpsId) {
+  await call('POST', `/api/vps/${vpsId}/renew`);
+}
+
+function confirmForceDelete(vpsId, name) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = `
+    <div class="confirm-box">
+      <h3 style="color:#c62828">🗑 ยืนยัน Force Delete</h3>
+      <p>ต้องการลบ VPS <strong>${name}</strong> (#${vpsId}) ทันทีใช่หรือไม่?<br>
+      <span style="color:#c62828;font-size:12px">⚠ ข้อมูลทั้งหมดในเครื่องจะหายถาวร ไม่มี Grace Period</span></p>
+      <div class="confirm-btns">
+        <button class="btn-confirm-yes" style="background:#c62828" onclick="doForceDelete(${vpsId});this.closest('.confirm-overlay').remove()">🗑 ยืนยัน Force Delete</button>
+        <button class="btn-confirm-no"  onclick="this.closest('.confirm-overlay').remove()">ยกเลิก</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function doForceDelete(vpsId) {
+  setCardBusy(vpsId, 'Deleting...');
+  const r = await call('DELETE', `/api/vps/${vpsId}`);
+  if (r && r.status < 300) {
+    // Card will be removed on next monitor refresh
+    const card = document.getElementById(`vcard-${vpsId}`);
+    if (card) card.style.opacity = '0.3';
+  }
+  setCardFree(vpsId);
+}
+
+function confirmStop(vpsId, name) {
+  const overlay = document.createElement('div');
+  overlay.className = 'confirm-overlay';
+  overlay.innerHTML = `
+    <div class="confirm-box">
+      <h3>⚠ ยืนยันการ Stop</h3>
+      <p>ต้องการ Stop เครื่อง <strong>${name}</strong> (#${vpsId}) ใช่หรือไม่?<br>
+      เครื่องจะหยุดทำงานทันที</p>
+      <div class="confirm-btns">
+        <button class="btn-confirm-yes" onclick="doStop(${vpsId});this.closest('.confirm-overlay').remove()">⏹ Stop เครื่อง</button>
+        <button class="btn-confirm-no"  onclick="this.closest('.confirm-overlay').remove()">ยกเลิก</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+async function doStop(vpsId) {
+  setCardBusy(vpsId, 'Stopping...');
+  const r = await call('POST', `/api/vps/${vpsId}/stop`);
+  if (r && r.status < 300) {
+    pollUntilStatus(vpsId, 'stopped');
+  } else {
+    await fetchLiveStatus(vpsId);
+    setCardFree(vpsId);
+  }
+}
+
+async function flushRedis() {
+  await call('DELETE', '/api/system-configs/cache/flush');
+}
+
+// ─── NAT / Port Rules ─────────────────────────────────────────────────────────
+
+async function natAddRule() {
+  const vpsId = document.getElementById('nat-add-vps-id').value;
+  const privateIp   = document.getElementById('nat-private-ip').value.trim();
+  const privatePort = parseInt(document.getElementById('nat-private-port').value);
+  const protocol    = document.getElementById('nat-protocol').value;
+  await call('POST', `/api/vps/${vpsId}/port-rules`, { privateIp, privatePort, protocol });
+}
+
+async function natDeleteRule() {
+  const vpsId  = document.getElementById('nat-del-vps-id').value;
+  const ruleId = document.getElementById('nat-del-rule-id').value;
+  await call('DELETE', `/api/vps/${vpsId}/port-rules/${ruleId}`);
+}
+
+// ─── Upgrade ──────────────────────────────────────────────────────────────────
+
+async function upgradePackage() {
+  const vpsId     = document.getElementById('upg-pkg-vps-id').value;
+  const packageId = parseInt(document.getElementById('upg-pkg-id').value);
+  await call('POST', `/api/vps/${vpsId}/upgrade/package`, { package_id: packageId });
+}
+
+async function upgradeCustom() {
+  const vpsId = document.getElementById('upg-cus-vps-id').value;
+  const body  = {};
+  const cores  = document.getElementById('upg-cores').value;
+  const memory = document.getElementById('upg-memory').value;
+  const disk   = document.getElementById('upg-disk').value;
+  if (cores)  body.cores       = parseInt(cores);
+  if (memory) body.memory_gib  = parseInt(memory);
+  if (disk)   body.disk_gb     = parseInt(disk);
+  await call('POST', `/api/vps/${vpsId}/upgrade/custom`, body);
+}
+
+// ─── Init
+updateTokenStatus();
+togglePaymentFields();
+</script>
+</body>
+</html>
